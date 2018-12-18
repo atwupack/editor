@@ -1,0 +1,13 @@
+[package]
+name = "editor"
+version = "0.1.0"
+authors = ["André Twupack <atwupack@mailbox.org>"]
+edition = "2018"
+
+[dependencies]
+glib = "^0"
+gio = "^0"
+
+[dependencies.gtk]
+version = "0.5.0"
+features = ["v3_16"]
