@@ -5,7 +5,7 @@ mod file_tree;
 use gtk::prelude::*;
 use std::path::PathBuf;
 
-use gtk::{Window, WindowType, Paned, Orientation, Frame};
+use gtk::{Window, WindowType, Paned, Orientation, Frame, ScrolledWindow};
 use crate::file_tree::FileTreePresenter;
 use crate::presenter::Presenter;
 
@@ -25,7 +25,11 @@ fn main() {
     let file_tree = FileTreePresenter::new();
     file_tree.add_root_node(root);
     let tree = file_tree.get_view();
-    vertical_split.pack1(  tree, true, false);
+
+    let scroll = ScrolledWindow::new(None, None);
+    scroll.add(tree);
+
+    vertical_split.pack1(  &scroll, true, false);
 
     //let frame1 = Frame::new("Frame 1");
 
