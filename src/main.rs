@@ -23,15 +23,9 @@ fn main() {
 
     let root = PathBuf::from(r"C:\Tools");
     let file_tree = FileTreePresenter::new();
-    {
-        file_tree.borrow_mut().add_root_node(root);
-        let tree_ref = file_tree.borrow();
-        let tree = tree_ref.get_view();
-
-        vertical_split.pack1(  tree, true, false);
-
-    }
-
+    file_tree.add_root_node(root);
+    let tree = file_tree.get_view();
+    vertical_split.pack1(  tree, true, false);
 
     //let frame1 = Frame::new("Frame 1");
 
