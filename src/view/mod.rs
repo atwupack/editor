@@ -1,4 +1,5 @@
 pub mod file_tree;
+pub mod property;
 
 use gtk::prelude::*;
 use crate::service::message::MessageService;
