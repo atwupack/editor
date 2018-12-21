@@ -1,4 +1,3 @@
-use crate::presenter::*;
 use gtk::prelude::*;
 use gtk::{TreeView, TreeIter, TreeViewColumn, CellRendererText, TreeStore, Type};
 use std::collections::HashMap;
@@ -7,6 +6,7 @@ use std::fs::read_dir;
 use std::rc::Rc;
 use std::cell::RefCell;
 use crate::service::message::MessageService;
+use crate::view::Presenter;
 
 /// Single file tree entry
 #[derive(Clone)]

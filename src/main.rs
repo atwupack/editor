@@ -1,14 +1,13 @@
 
-mod presenter;
-mod file_tree;
 mod service;
+mod view;
 
 use gtk::prelude::*;
 use std::path::PathBuf;
 
 use gtk::{Window, WindowType, Paned, Orientation, Frame, ScrolledWindow};
-use crate::file_tree::FileTreePresenter;
-use crate::presenter::Presenter;
+use crate::view::file_tree::FileTreePresenter;
+use crate::view::Presenter;
 use crate::service::message::MessageService;
 
 fn main() {
