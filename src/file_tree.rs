@@ -163,7 +163,9 @@ impl Presenter<TreeView> for FileTreePresenter {
         let ft_clone= file_tree.clone();
         ms.register("tree.set-root", move |caller, id, obj|{
             println!("{}", caller);
-            println!("{}", id)
+            println!("{}", id);
+            let path = obj.downcast_ref::<PathBuf>().unwrap();
+            println!("{:?}", path);
         });
 
         file_tree
