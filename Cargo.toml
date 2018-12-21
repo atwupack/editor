@@ -7,6 +7,7 @@ edition = "2018"
 [dependencies]
 glib = "^0"
 gio = "^0"
+downcast-rs = "1.0.3"
 
 [dependencies.gtk]
 version = "0.5.0"

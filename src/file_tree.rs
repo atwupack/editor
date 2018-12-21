@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use std::fs::read_dir;
 use std::rc::Rc;
 use std::cell::RefCell;
+use crate::service::message::MessageService;
 
 /// Single file tree entry
 #[derive(Clone)]
@@ -73,11 +74,12 @@ pub struct FileTreePresenter {
     model: Rc<RefCell<FileTreeModel>>,
     tree: TreeView,
     tree_store: TreeStore,
+    message_service: MessageService,
 }
 
 impl FileTreePresenter {
 
-    fn add_node(&self, parent: Option<&TreeIter>, path: PathBuf) {
+    fn add_node(&self, parent: Option<&TreeIter>, path: &PathBuf) {
         let mut model = self.model.borrow_mut();
         let index = model.add_item(&path);
 
@@ -108,7 +110,7 @@ impl FileTreePresenter {
         model.update_item(item);
     }
 
-    pub fn add_root_node(&self, root: PathBuf) {
+    pub fn add_root_node(&self, root: &PathBuf) {
         self.add_node(None, root);
     }
 
@@ -125,7 +127,7 @@ impl FileTreePresenter {
 
                 let children = tree_item.load_children();
                 for entry in children {
-                    tree_clone.add_node(Some(tree_iter), entry)
+                    tree_clone.add_node(Some(tree_iter), &entry)
                 }
                 tree_item.children_read = true;
                 tree_clone.update_tree_item(tree_item);
@@ -138,7 +140,7 @@ impl FileTreePresenter {
 
 impl Presenter<TreeView> for FileTreePresenter {
 
-    fn new() -> Self {
+    fn new(ms: &MessageService) -> Self {
         let tree_store = TreeStore::new( &[Type::U32,Type::String]);
         let tree = TreeView::new_with_model(&tree_store);
         append_column(&tree);
@@ -153,9 +155,16 @@ impl Presenter<TreeView> for FileTreePresenter {
             model: Rc::new(RefCell::new(model)),
             tree,
             tree_store,
+            message_service: ms.clone(),
         };
 
         file_tree.register_test_expand_row();
+
+        let ft_clone= file_tree.clone();
+        ms.register("tree.set-root", move |caller, id, obj|{
+            println!("{}", caller);
+            println!("{}", id)
+        });
 
         file_tree
     }
