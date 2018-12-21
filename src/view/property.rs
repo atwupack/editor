@@ -26,6 +26,7 @@ impl Presenter<TreeView> for PropertyPresenter {
 
         ms.register("properties_changed", |_,_,obj| {
 
+            println!("Got property changed event");
             let data = obj.downcast_ref::<Vec<(&str, &str)>>().unwrap();
             for (fst, snd) in data.iter() {
                 println!("{}, {}", fst, snd);

@@ -137,10 +137,12 @@ impl FileTreePresenter {
     }
 
     fn register_select_row(&self) {
-        let selection = self.get_view().get_selection();
-        selection.connect_changed(move |_| {
+        let tree_clone = self.clone();
+        let _handler_id = self.get_view().get_selection().connect_changed(move |selection| {
+            println!("Selection changed");
             let data = vec![("1", "1"), ("2", "2")];
-            self.message_service.send("file_tree", "properties_changed", &data);
+            tree_clone.message_service.send("file_tree", "properties_changed", &data);
+            println!("Selection changed sent");
         });
     }
 
@@ -167,6 +169,7 @@ impl Presenter<TreeView> for FileTreePresenter {
         };
 
         file_tree.register_test_expand_row();
+        file_tree.register_select_row();
 
         let ft_clone= file_tree.clone();
         ms.register("tree.set-root", move |caller, id, obj|{
