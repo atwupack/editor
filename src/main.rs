@@ -7,6 +7,7 @@ use std::path::PathBuf;
 
 use gtk::{Window, WindowType, Paned, Orientation, Frame, ScrolledWindow};
 use crate::view::file_tree::FileTreePresenter;
+use crate::view::property::PropertyPresenter;
 use crate::view::Presenter;
 use crate::service::message::MessageService;
 
@@ -18,12 +19,14 @@ fn main() {
 
     let message_service = MessageService::new();
 
+    // create window
     let window = Window::new(WindowType::Toplevel);
-    window.set_title("First GTK+ Program");
+    window.set_title("My Little Editor");
     window.set_default_size(350, 70);
     let vertical_split = Paned::new(Orientation::Horizontal);
-    vertical_split.set_wide_handle(true);
+    vertical_split.set_wide_handle(false);
 
+    // create tree
     let root = PathBuf::from(r"C:\Tools");
     let file_tree = FileTreePresenter::new(&message_service);
     file_tree.add_root_node(&root);
@@ -34,10 +37,13 @@ fn main() {
 
     vertical_split.pack1(  &scroll, true, false);
 
-    //let frame1 = Frame::new("Frame 1");
+    // create properties view
+    let props = PropertyPresenter::new(&message_service);
 
-    let frame2 = Frame::new("Frame 2");
-    vertical_split.pack2(&frame2, false, false);
+    let scroll = ScrolledWindow::new(None, None);
+    scroll.add(props.get_view());
+
+    vertical_split.pack2(&scroll, false, false);
 
     window.add(&vertical_split);
     window.show_all();

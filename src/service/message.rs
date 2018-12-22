@@ -22,15 +22,20 @@ impl MessageService {
 
     pub fn send(&self, comp_id: &str, message_id: &str, message_obj: &Any) {
         let callbacks = self.listeners.borrow();
-        for item in callbacks.iter() {
-//            item(comp_id, message_id, message_obj);
-            println!("Test")
+        if !callbacks.contains_key(message_id) {
+            println!("Nothing to do");
+            return;
+        }
+        let recvs = callbacks.get(message_id).unwrap();
+        for item in recvs.iter() {
+            item(comp_id, message_id, message_obj);
         }
     }
 
-    pub fn register<F: Fn(&str, &str, &Any) + 'static>(&self, message_id: &str, f: F) {
+    pub fn register<F: Fn(&str, &str, &Any) + 'static>(&self, message_id: &'static str, f: F) {
         let mut list = self.listeners.borrow_mut();
-        let recvs = list.(message_id).unwrap_or(Vec::new());
+        let mut recvs = list.remove(message_id).unwrap_or(Vec::new());
         recvs.push(Box::new(f));
+        list.insert(message_id, recvs);
     }
 }
