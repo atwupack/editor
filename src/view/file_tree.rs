@@ -1,8 +1,7 @@
 use gtk::prelude::*;
-use gtk::{TreeView, TreeIter, TreeViewColumn, CellRendererText, TreeStore, Type, TreeSelection};
+use gtk::{TreeView, TreeIter, TreeViewColumn, CellRendererText, TreeStore, Type};
 use std::collections::HashMap;
 use std::path::PathBuf;
-use std::str::FromStr;
 use std::fs::read_dir;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -141,7 +140,7 @@ impl FileTreePresenter {
         let tree_clone = self.clone();
         let _handler_id = self.get_view().get_selection().connect_changed(move |selection| {
             let mut data = Vec::new();
-            let (model, iter) = selection.get_selected().unwrap();
+            let (_model, iter) = selection.get_selected().unwrap();
             let item = tree_clone.find_tree_item(&iter);
             let path = item.path;
             data.push(("Path", String::from(path.to_str().unwrap())));
@@ -175,9 +174,9 @@ impl Presenter<TreeView> for FileTreePresenter {
         file_tree.register_test_expand_row();
         file_tree.register_select_row();
 
-        let ft_clone= file_tree.clone();
-        ms.register("tree.set-root", move |caller, id, obj|{
-            let path = obj.downcast_ref::<PathBuf>().unwrap();
+        let _ft_clone= file_tree.clone();
+        ms.register("tree.set-root", move |_caller, _id, obj|{
+            let _path = obj.downcast_ref::<PathBuf>().unwrap();
         });
 
         file_tree

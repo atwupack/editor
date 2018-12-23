@@ -2,7 +2,7 @@ use crate::view::Presenter;
 use crate::service::message::MessageService;
 
 use gtk::prelude::*;
-use gtk::{TreeView, ListStore, Type, TreeSelection, TreeViewColumn, CellRendererText};
+use gtk::{TreeView, ListStore, Type, TreeViewColumn, CellRendererText};
 
 #[derive(Clone)]
 pub struct PropertyPresenter {

@@ -5,7 +5,7 @@ mod view;
 use gtk::prelude::*;
 use std::path::PathBuf;
 
-use gtk::{Window, WindowType, Paned, Orientation, Frame, ScrolledWindow};
+use gtk::{Window, WindowType, Paned, Orientation, ScrolledWindow};
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::Presenter;
