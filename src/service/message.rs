@@ -23,7 +23,6 @@ impl MessageService {
     pub fn send(&self, comp_id: &str, message_id: &str, message_obj: &Any) {
         let callbacks = self.listeners.borrow();
         if !callbacks.contains_key(message_id) {
-            println!("Nothing to do");
             return;
         }
         let recvs = callbacks.get(message_id).unwrap();

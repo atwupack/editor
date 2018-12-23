@@ -2,6 +2,7 @@ use gtk::prelude::*;
 use gtk::{TreeView, TreeIter, TreeViewColumn, CellRendererText, TreeStore, Type, TreeSelection};
 use std::collections::HashMap;
 use std::path::PathBuf;
+use std::str::FromStr;
 use std::fs::read_dir;
 use std::rc::Rc;
 use std::cell::RefCell;
@@ -139,10 +140,13 @@ impl FileTreePresenter {
     fn register_select_row(&self) {
         let tree_clone = self.clone();
         let _handler_id = self.get_view().get_selection().connect_changed(move |selection| {
-            println!("Selection changed");
-            let data = vec![("1", "1"), ("2", "2")];
+            let mut data = Vec::new();
+            let (model, iter) = selection.get_selected().unwrap();
+            let item = tree_clone.find_tree_item(&iter);
+            let path = item.path;
+            data.push(("Path", String::from(path.to_str().unwrap())));
+            data.push(("Name", String::from(path.file_name().unwrap().to_str().unwrap())));
             tree_clone.message_service.send("file_tree", "properties_changed", &data);
-            println!("Selection changed sent");
         });
     }
 

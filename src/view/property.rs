@@ -17,7 +17,7 @@ fn append_column(tree: &TreeView) {
     let text_cell1 = CellRendererText::new();
 
     column1.pack_start(&text_cell1, true);
-    column1.add_attribute(&text_cell1, "text", 1);
+    column1.add_attribute(&text_cell1, "text", 0);
     tree.append_column(&column1);
 
     let column2 = TreeViewColumn::new();
@@ -35,7 +35,7 @@ impl PropertyPresenter {
         let pres_clone = self.clone();
         self.message_service.register("properties_changed", move |_,_,obj| {
             pres_clone.list_store.clear();
-            let data = obj.downcast_ref::<Vec<(&str, &str)>>().unwrap();
+            let data = obj.downcast_ref::<Vec<(&str, String)>>().unwrap();
             for (fst, snd) in data.iter() {
                 pres_clone.list_store.insert_with_values(None, &[0,1], &[&fst,&snd]);
             }
