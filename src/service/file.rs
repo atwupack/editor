@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::fs::read_dir;
-
+use crate::service::Service;
 
 #[derive(Clone)]
 pub struct FileItem {
@@ -64,4 +64,26 @@ impl FileCache {
 #[derive(Clone)]
 pub struct FileService {
     cache: Rc<RefCell<FileCache>>,
+}
+
+impl Service for FileService {
+    fn new() -> FileService {
+        let cache = FileCache {
+            data: HashMap::new(),
+            next_index: 0,
+        };
+
+        FileService {
+            cache: Rc::new(RefCell::new(cache)),
+        }
+    }
+
+    fn id() -> &'static str {
+        "file-service"
+    }
+}
+
+#[cfg(test)]
+mod tests {
+
 }

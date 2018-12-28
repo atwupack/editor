@@ -3,22 +3,25 @@ use std::any::Any;
 use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
-
-trait MessageObject: Downcast {}
-impl_downcast!(MessageObject);
+use crate::service::Service;
 
 #[derive(Clone)]
 pub struct MessageService {
     listeners: Rc<RefCell<HashMap<&'static str, Vec<Box<Fn(&str, &str, &Any) + 'static>>>>>,
 }
 
-impl MessageService {
-
-    pub fn new() -> MessageService {
+impl Service for MessageService {
+    fn new() -> MessageService {
         MessageService {
             listeners: Rc::new(RefCell::new(HashMap::new())),
         }
     }
+     fn id() -> &'static str {
+         "message-service"
+     }
+}
+
+impl MessageService {
 
     pub fn send(&self, comp_id: &str, message_id: &str, message_obj: &Any) {
         let callbacks = self.listeners.borrow();

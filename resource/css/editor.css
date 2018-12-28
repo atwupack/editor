@@ -1,0 +1,11 @@
+notebook > header > tabs > * > label {
+    background-color: blue;
+}
+
+notebook > hedaer > tabs > * {
+    background-color: red;
+}
+
+notebook > header > tabs {
+    background-color: yellow;
+}

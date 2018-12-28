@@ -1,5 +1,6 @@
 use crate::view::Presenter;
 use crate::service::message::MessageService;
+use crate::app::App;
 
 use gtk::prelude::*;
 use gtk::{TreeView, ListStore, Type, TreeViewColumn, CellRendererText};
@@ -46,13 +47,16 @@ impl PropertyPresenter {
 
 impl Presenter<TreeView> for PropertyPresenter {
 
-    fn new(ms: &MessageService) -> Self {
+    fn new(app: &App) -> Self {
 
         let list_store = ListStore::new(&[Type::String, Type::String]);
         let table = TreeView::new_with_model(&list_store);
 
         append_column(&table);
         table.set_headers_visible(true);
+
+        let ms : MessageService = app.service_registry.get_service();
+
         let property_view = PropertyPresenter {
             message_service: ms.clone(),
             table,

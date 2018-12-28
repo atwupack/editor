@@ -7,6 +7,7 @@ use std::rc::Rc;
 use std::cell::RefCell;
 use crate::service::message::MessageService;
 use crate::view::Presenter;
+use crate::app::App;
 
 /// Single file tree entry
 #[derive(Clone)]
@@ -153,7 +154,7 @@ impl FileTreePresenter {
 
 impl Presenter<TreeView> for FileTreePresenter {
 
-    fn new(ms: &MessageService) -> Self {
+    fn new(app: &App) -> Self {
         let tree_store = TreeStore::new( &[Type::U32,Type::String]);
         let tree = TreeView::new_with_model(&tree_store);
         append_column(&tree);
@@ -164,6 +165,8 @@ impl Presenter<TreeView> for FileTreePresenter {
             next_index: 0,
         };
 
+        let ms :MessageService = app.service_registry.get_service();
+
         let file_tree = FileTreePresenter {
             model: Rc::new(RefCell::new(model)),
             tree,
@@ -173,11 +176,6 @@ impl Presenter<TreeView> for FileTreePresenter {
 
         file_tree.register_test_expand_row();
         file_tree.register_select_row();
-
-        let _ft_clone= file_tree.clone();
-        ms.register("tree.set-root", move |_caller, _id, obj|{
-            let _path = obj.downcast_ref::<PathBuf>().unwrap();
-        });
 
         file_tree
     }

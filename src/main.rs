@@ -1,15 +1,18 @@
 
 mod service;
 mod view;
+mod app;
 
 use gtk::prelude::*;
+use gdk::prelude::*;
 use std::path::PathBuf;
-
-use gtk::{Window, WindowType, Paned, Orientation, ScrolledWindow};
+use gdk::{Screen};
+use gtk::{CssProvider, Window, WindowType, Paned, StyleContext,
+          Orientation, ScrolledWindow, Notebook, Label, PositionType};
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::Presenter;
-use crate::service::message::MessageService;
+use crate::app::App;
 
 fn main() {
     if gtk::init().is_err() {
@@ -17,7 +20,14 @@ fn main() {
         return;
     }
 
-    let message_service = MessageService::new();
+    let screen = Screen::get_default().unwrap();
+
+    let css = CssProvider::new();
+    css.load_from_path("resource/css/editor.css").unwrap();
+
+    StyleContext::add_provider_for_screen(&screen, &css, 200);
+
+    let app = App::new();
 
     // create window
     let window = Window::new(WindowType::Toplevel);
@@ -28,17 +38,28 @@ fn main() {
 
     // create tree
     let root = PathBuf::from(r"C:\Tools");
-    let file_tree = FileTreePresenter::new(&message_service);
+    let file_tree = FileTreePresenter::new(&app);
     file_tree.add_root_node(&root);
     let tree = file_tree.get_view();
 
     let scroll = ScrolledWindow::new(None, None);
     scroll.add(tree);
 
-    vertical_split.pack1(  &scroll, true, false);
+    let left_notebook = Notebook::new();
+    left_notebook.set_tab_pos(PositionType::Left);
+    left_notebook.add(&scroll);
+    let file_label = Label::new("File");
+    file_label.set_angle(90.0);
+    file_label.set_single_line_mode(true);
+    file_label.set_vexpand(false);
+    file_label.set_hexpand(false);
+
+    left_notebook.set_tab_label(&scroll, &file_label);
+
+    vertical_split.pack1(  &left_notebook, true, false);
 
     // create properties view
-    let props = PropertyPresenter::new(&message_service);
+    let props = PropertyPresenter::new(&app);
 
     let scroll = ScrolledWindow::new(None, None);
     scroll.add(props.get_view());
@@ -48,16 +69,9 @@ fn main() {
     window.add(&vertical_split);
     window.show_all();
 
-
-
     window.connect_delete_event(|_, _| {
         gtk::main_quit();
         Inhibit(false)
-    });
-
-    idle_add(move || {
-        message_service.send("main", "set-root", &root);
-        Continue(false)
     });
 
     gtk::main();
