@@ -16,11 +16,11 @@ pub trait Service: Downcast {
 impl_downcast!(Service);
 
 #[derive(Clone)]
-pub struct ServiceRegistry {
+pub struct ServiceFactory {
     services: Rc<RefCell<HashMap<&'static str, Box<dyn Service>>>>,
 }
 
-impl ServiceRegistry {
+impl ServiceFactory {
     pub fn get_service<T: Service+Clone>(&self) -> T {
         let id = T::id();
         let mut map = self.services.borrow_mut();
@@ -32,7 +32,7 @@ impl ServiceRegistry {
     }
 
     pub fn new() -> Self {
-        ServiceRegistry {
+        ServiceFactory {
             services: Rc::new(RefCell::new(HashMap::new())),
         }
     }
@@ -40,11 +40,11 @@ impl ServiceRegistry {
 
 #[cfg(test)]
 mod tests {
-    use crate::service::ServiceRegistry;
+    use crate::service::ServiceFactory;
     use crate::service::message::MessageService;
     #[test]
     fn get_message_service() {
-        let sr = ServiceRegistry::new();
+        let sr = ServiceFactory::new();
         let ms :MessageService = sr.get_service();
         ms.send("test-comp", "test-msg", &"test-obj");
     }

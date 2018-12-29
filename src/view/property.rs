@@ -55,7 +55,7 @@ impl Presenter<TreeView> for PropertyPresenter {
         append_column(&table);
         table.set_headers_visible(true);
 
-        let ms : MessageService = app.service_registry.get_service();
+        let ms : MessageService = app.service_factory.get_service();
 
         let property_view = PropertyPresenter {
             message_service: ms.clone(),
