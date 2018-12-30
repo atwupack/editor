@@ -1,65 +1,11 @@
 use crate::app::App;
 use crate::service::message::MessageService;
+use crate::service::file::{FileItem, FileService};
 use crate::view::Presenter;
 use gtk::prelude::*;
 use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
-use std::cell::RefCell;
 use std::collections::HashMap;
-use std::fs::read_dir;
 use std::path::PathBuf;
-use std::rc::Rc;
-
-/// Single file tree entry
-#[derive(Clone)]
-struct FileTreeItem {
-    index: u32,
-    path: PathBuf,
-    children_read: bool,
-}
-
-impl FileTreeItem {
-    fn load_children(&self) -> Vec<PathBuf> {
-        let mut result = Vec::new();
-        let children = read_dir(self.path.clone()).unwrap();
-        for entry in children {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            result.push(path);
-        }
-        result
-    }
-}
-
-struct FileTreeModel {
-    data: HashMap<u32, FileTreeItem>,
-    next_index: u32,
-}
-
-impl FileTreeModel {
-    fn inc_index(&mut self) -> u32 {
-        self.next_index += 1;
-        self.next_index
-    }
-
-    fn add_item(&mut self, path: &PathBuf) -> u32 {
-        let index = self.inc_index();
-        let item = FileTreeItem {
-            index,
-            path: path.clone(),
-            children_read: false,
-        };
-        let _old = self.data.insert(index, item);
-        index
-    }
-
-    fn get_item(&self, index: u32) -> &FileTreeItem {
-        self.data.get(&index).unwrap()
-    }
-
-    fn update_item(&mut self, item: FileTreeItem) {
-        let _old = self.data.insert(item.index, item);
-    }
-}
 
 fn append_column(tree: &TreeView) {
     let column = TreeViewColumn::new();
@@ -72,30 +18,28 @@ fn append_column(tree: &TreeView) {
 
 #[derive(Clone)]
 pub struct FileTreePresenter {
-    model: Rc<RefCell<FileTreeModel>>,
     tree: TreeView,
     tree_store: TreeStore,
     message_service: MessageService,
+    file_service: FileService,
 }
 
 impl FileTreePresenter {
-    fn add_node(&self, parent: Option<&TreeIter>, path: &PathBuf) {
-        let mut model = self.model.borrow_mut();
-        let index = model.add_item(&path);
+    fn add_node(&self, parent: Option<&TreeIter>, item: &FileItem) {
 
         let tree_iter = if parent == None {
             self.tree_store
-                .insert_with_values(None, None, &[0, 1], &[&index, &path.to_str()])
+                .insert_with_values(None, None, &[0, 1], &[&item.index(), &item.path()])
         } else {
             self.tree_store.insert_with_values(
                 parent,
                 None,
                 &[0, 1],
-                &[&index, &path.file_name().unwrap().to_str().unwrap()],
+                &[&item.index(), &item.name()],
             )
         };
 
-        if path.is_dir() {
+        if item.is_dir() {
             let dummy_index: u32 = 0;
             let _tree_iter_2 = self.tree_store.insert_with_values(
                 Some(&tree_iter),
@@ -106,21 +50,20 @@ impl FileTreePresenter {
         }
     }
 
-    fn find_tree_item(&self, node: &TreeIter) -> FileTreeItem {
-        let index = self.tree_store.get_value(node, 0).get::<u32>().unwrap();
-
-        let model = self.model.borrow();
-        let item = model.get_item(index);
-        item.clone()
+    fn remove_all_children(&self, parent: &TreeIter) {
+        let child_iter = self.tree_store.iter_children(parent).unwrap();
+        while self.tree_store.remove(&child_iter) {}
     }
 
-    fn update_tree_item(&self, item: FileTreeItem) {
-        let mut model = self.model.borrow_mut();
-        model.update_item(item);
+    fn find_tree_item(&self, node: &TreeIter) -> FileItem {
+        let index:u32 = self.tree_store.get_value(node, 0).get().unwrap();
+        self.file_service.get_item(index)
     }
 
     pub fn add_root_node(&self, root: &PathBuf) {
-        self.add_node(None, root);
+        let index = self.file_service.add_item(root);
+        let item = self.file_service.get_item(index);
+        self.add_node(None, &item);
     }
 
     fn register_test_expand_row(&self) {
@@ -128,18 +71,11 @@ impl FileTreePresenter {
         let _handler_id =
             self.get_view()
                 .connect_test_expand_row(move |_tree, tree_iter, _tree_path| {
-                    let mut tree_item = tree_clone.find_tree_item(tree_iter);
-
-                    if !tree_item.children_read {
-                        let dummy_child = tree_clone.tree_store.iter_children(tree_iter).unwrap();
-                        let _result = tree_clone.tree_store.remove(&dummy_child);
-
-                        let children = tree_item.load_children();
-                        for entry in children {
-                            tree_clone.add_node(Some(tree_iter), &entry)
-                        }
-                        tree_item.children_read = true;
-                        tree_clone.update_tree_item(tree_item);
+                    tree_clone.remove_all_children(tree_iter);
+                    let tree_item = tree_clone.find_tree_item(tree_iter);
+                    let children = tree_clone.file_service.get_children(tree_item.index());
+                    for child in children {
+                        tree_clone.add_node(Some(tree_iter), &child);
                     }
                     Inhibit(false)
                 });
@@ -154,11 +90,10 @@ impl FileTreePresenter {
                 let mut data = Vec::new();
                 let (_model, iter) = selection.get_selected().unwrap();
                 let item = tree_clone.find_tree_item(&iter);
-                let path = item.path;
-                data.push(("Path", String::from(path.to_str().unwrap())));
+                data.push(("Path", String::from(item.path())));
                 data.push((
                     "Name",
-                    String::from(path.file_name().unwrap().to_str().unwrap()),
+                    String::from(item.name()),
                 ));
                 tree_clone
                     .message_service
@@ -174,18 +109,14 @@ impl Presenter<TreeView> for FileTreePresenter {
         append_column(&tree);
         tree.set_headers_visible(false);
 
-        let model = FileTreeModel {
-            data: HashMap::new(),
-            next_index: 0,
-        };
-
-        let ms: MessageService = app.get_service();
+        let message_service: MessageService = app.get_service();
+        let file_service: FileService = app.get_service();
 
         let file_tree = FileTreePresenter {
-            model: Rc::new(RefCell::new(model)),
             tree,
             tree_store,
-            message_service: ms.clone(),
+            message_service,
+            file_service,
         };
 
         file_tree.register_test_expand_row();

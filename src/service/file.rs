@@ -14,6 +14,23 @@ pub struct FileItem {
 }
 
 impl FileItem {
+
+    pub fn is_dir(&self) -> bool {
+        self.path.is_dir()
+    }
+
+    pub fn index(&self) -> u32 {
+       self.index
+    }
+
+    pub fn name(&self) -> &str {
+        self.path.file_name().unwrap().to_str().unwrap()
+    }
+
+    pub fn path(&self) -> &str {
+        self.path.to_str().unwrap()
+    }
+
     fn load_children(&self) -> Vec<PathBuf> {
         let mut result = Vec::new();
         let children = read_dir(self.path.clone()).unwrap();
@@ -64,6 +81,41 @@ pub struct FileService {
     cache: Rc<RefCell<FileCache>>,
 }
 
+impl FileService {
+    pub fn get_item(&self, index: u32) -> FileItem {
+        let cache = self.cache.borrow();
+        cache.get_item(index).clone()
+    }
+
+    pub fn add_item(&self, path: &PathBuf) -> u32 {
+        let mut cache = self.cache.borrow_mut();
+        cache.add_item(path)
+    }
+
+    pub fn get_children(&self, index: u32) -> Vec<FileItem> {
+        let parent = self.get_item(index);
+        if !parent.children_read {
+            let mut new_children = Vec::new();
+            for child_path in parent.load_children() {
+                let new_index = self.add_item(&child_path);
+                new_children.push(new_index);
+            }
+            let mut new_parent = parent.clone();
+            new_parent.children = new_children;
+            new_parent.children_read = true;
+
+            let mut cache = self.cache.borrow_mut();
+            cache.update_item(new_parent);
+        }
+        let parent = self.get_item(index);
+        let mut children = Vec::new();
+        for child_index in parent.children {
+            children.push(self.get_item(child_index));
+        }
+        children
+    }
+}
+
 impl Service for FileService {
     fn new() -> FileService {
         let cache = FileCache {
@@ -79,7 +131,9 @@ impl Service for FileService {
     fn id() -> &'static str {
         "file-service"
     }
+
 }
 
 #[cfg(test)]
-mod tests {}
+mod tests {
+}
