@@ -1,18 +1,19 @@
-
+mod app;
 mod service;
 mod view;
-mod app;
 
-use gtk::prelude::*;
-use gdk::prelude::*;
-use std::path::PathBuf;
-use gdk::{Screen};
-use gtk::{CssProvider, Window, WindowType, Paned, StyleContext,
-          Orientation, ScrolledWindow, Notebook, Label, PositionType};
+use crate::app::App;
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::Presenter;
-use crate::app::App;
+use gdk::prelude::*;
+use gdk::Screen;
+use gtk::prelude::*;
+use gtk::{
+    CssProvider, Label, Notebook, Orientation, Paned, PositionType, ScrolledWindow, StyleContext,
+    Window, WindowType,
+};
+use std::path::PathBuf;
 
 fn main() {
     if gtk::init().is_err() {
@@ -56,7 +57,7 @@ fn main() {
 
     left_notebook.set_tab_label(&scroll, &file_label);
 
-    vertical_split.pack1(  &left_notebook, true, false);
+    vertical_split.pack1(&left_notebook, true, false);
 
     // create properties view
     let props = PropertyPresenter::new(&app);

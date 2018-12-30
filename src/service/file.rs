@@ -1,9 +1,9 @@
-use std::path::PathBuf;
-use std::collections::HashMap;
-use std::rc::Rc;
-use std::cell::RefCell;
-use std::fs::read_dir;
 use crate::service::Service;
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::read_dir;
+use std::path::PathBuf;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct FileItem {
@@ -19,7 +19,7 @@ impl FileItem {
         let children = read_dir(self.path.clone()).unwrap();
         for entry in children {
             let entry = entry.unwrap();
-            let path= entry.path();
+            let path = entry.path();
             result.push(path);
         }
         result
@@ -29,13 +29,12 @@ impl FileItem {
 #[derive(Clone)]
 struct FileCache {
     data: HashMap<u32, FileItem>,
-    next_index : u32,
+    next_index: u32,
 }
-
 
 impl FileCache {
     fn inc_index(&mut self) -> u32 {
-        self.next_index+=1;
+        self.next_index += 1;
         self.next_index
     }
 
@@ -60,7 +59,6 @@ impl FileCache {
     }
 }
 
-
 #[derive(Clone)]
 pub struct FileService {
     cache: Rc<RefCell<FileCache>>,
@@ -84,6 +82,4 @@ impl Service for FileService {
 }
 
 #[cfg(test)]
-mod tests {
-
-}
+mod tests {}

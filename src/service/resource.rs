@@ -1,9 +1,7 @@
 use crate::service::Service;
 
 #[derive(Clone)]
-pub struct ResourceService {
-
-}
+pub struct ResourceService {}
 
 impl Service for ResourceService {
     fn new() -> Self {

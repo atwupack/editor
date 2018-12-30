@@ -1,9 +1,9 @@
-use downcast_rs::{Downcast, impl_downcast};
+use crate::service::Service;
+use downcast_rs::{impl_downcast, Downcast};
 use std::any::Any;
-use std::rc::Rc;
 use std::cell::RefCell;
 use std::collections::HashMap;
-use crate::service::Service;
+use std::rc::Rc;
 
 #[derive(Clone)]
 pub struct MessageService {
@@ -16,13 +16,12 @@ impl Service for MessageService {
             listeners: Rc::new(RefCell::new(HashMap::new())),
         }
     }
-     fn id() -> &'static str {
-         "message-service"
-     }
+    fn id() -> &'static str {
+        "message-service"
+    }
 }
 
 impl MessageService {
-
     pub fn send(&self, comp_id: &str, message_id: &str, message_obj: &Any) {
         let callbacks = self.listeners.borrow();
         if !callbacks.contains_key(message_id) {

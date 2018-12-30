@@ -1,9 +1,9 @@
-use crate::view::Presenter;
-use crate::service::message::MessageService;
 use crate::app::App;
+use crate::service::message::MessageService;
+use crate::view::Presenter;
 
 use gtk::prelude::*;
-use gtk::{TreeView, ListStore, Type, TreeViewColumn, CellRendererText};
+use gtk::{CellRendererText, ListStore, TreeView, TreeViewColumn, Type};
 
 #[derive(Clone)]
 pub struct PropertyPresenter {
@@ -32,30 +32,29 @@ fn append_column(tree: &TreeView) {
 
 impl PropertyPresenter {
     fn register_properties_changed(&self) {
-
         let pres_clone = self.clone();
-        self.message_service.register("properties_changed", move |_,_,obj| {
-            pres_clone.list_store.clear();
-            let data = obj.downcast_ref::<Vec<(&str, String)>>().unwrap();
-            for (fst, snd) in data.iter() {
-                pres_clone.list_store.insert_with_values(None, &[0,1], &[&fst,&snd]);
-            }
-        });
-
+        self.message_service
+            .register("properties_changed", move |_, _, obj| {
+                pres_clone.list_store.clear();
+                let data = obj.downcast_ref::<Vec<(&str, String)>>().unwrap();
+                for (fst, snd) in data.iter() {
+                    pres_clone
+                        .list_store
+                        .insert_with_values(None, &[0, 1], &[&fst, &snd]);
+                }
+            });
     }
 }
 
 impl Presenter<TreeView> for PropertyPresenter {
-
     fn new(app: &App) -> Self {
-
         let list_store = ListStore::new(&[Type::String, Type::String]);
         let table = TreeView::new_with_model(&list_store);
 
         append_column(&table);
         table.set_headers_visible(true);
 
-        let ms : MessageService = app.get_service();
+        let ms: MessageService = app.get_service();
 
         let property_view = PropertyPresenter {
             message_service: ms.clone(),
@@ -71,4 +70,3 @@ impl Presenter<TreeView> for PropertyPresenter {
         &self.table
     }
 }
-

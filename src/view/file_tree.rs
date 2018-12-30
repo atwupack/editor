@@ -1,13 +1,13 @@
-use gtk::prelude::*;
-use gtk::{TreeView, TreeIter, TreeViewColumn, CellRendererText, TreeStore, Type};
-use std::collections::HashMap;
-use std::path::PathBuf;
-use std::fs::read_dir;
-use std::rc::Rc;
-use std::cell::RefCell;
+use crate::app::App;
 use crate::service::message::MessageService;
 use crate::view::Presenter;
-use crate::app::App;
+use gtk::prelude::*;
+use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
+use std::cell::RefCell;
+use std::collections::HashMap;
+use std::fs::read_dir;
+use std::path::PathBuf;
+use std::rc::Rc;
 
 /// Single file tree entry
 #[derive(Clone)]
@@ -23,7 +23,7 @@ impl FileTreeItem {
         let children = read_dir(self.path.clone()).unwrap();
         for entry in children {
             let entry = entry.unwrap();
-            let path= entry.path();
+            let path = entry.path();
             result.push(path);
         }
         result
@@ -32,12 +32,12 @@ impl FileTreeItem {
 
 struct FileTreeModel {
     data: HashMap<u32, FileTreeItem>,
-    next_index : u32,
+    next_index: u32,
 }
 
 impl FileTreeModel {
     fn inc_index(&mut self) -> u32 {
-        self.next_index+=1;
+        self.next_index += 1;
         self.next_index
     }
 
@@ -79,30 +79,38 @@ pub struct FileTreePresenter {
 }
 
 impl FileTreePresenter {
-
     fn add_node(&self, parent: Option<&TreeIter>, path: &PathBuf) {
         let mut model = self.model.borrow_mut();
         let index = model.add_item(&path);
 
-        let tree_iter = if parent==None {
-            self.tree_store.insert_with_values(None, None, &[0, 1], &[&index, &path.to_str()])
-        }
-        else {
-            self.tree_store.insert_with_values(parent, None, &[0, 1], &[&index, &path.file_name().unwrap().to_str().unwrap()])
+        let tree_iter = if parent == None {
+            self.tree_store
+                .insert_with_values(None, None, &[0, 1], &[&index, &path.to_str()])
+        } else {
+            self.tree_store.insert_with_values(
+                parent,
+                None,
+                &[0, 1],
+                &[&index, &path.file_name().unwrap().to_str().unwrap()],
+            )
         };
 
         if path.is_dir() {
             let dummy_index: u32 = 0;
-            let _tree_iter_2 = self.tree_store.insert_with_values(Some(&tree_iter), None, &[0, 1], &[ &dummy_index, &"Loading..."]);
+            let _tree_iter_2 = self.tree_store.insert_with_values(
+                Some(&tree_iter),
+                None,
+                &[0, 1],
+                &[&dummy_index, &"Loading..."],
+            );
         }
-
     }
 
     fn find_tree_item(&self, node: &TreeIter) -> FileTreeItem {
         let index = self.tree_store.get_value(node, 0).get::<u32>().unwrap();
 
         let model = self.model.borrow();
-        let item =  model.get_item(index);
+        let item = model.get_item(index);
         item.clone()
     }
 
@@ -117,45 +125,51 @@ impl FileTreePresenter {
 
     fn register_test_expand_row(&self) {
         let tree_clone = self.clone();
-        let _handler_id = self.get_view().connect_test_expand_row( move |_tree, tree_iter, _tree_path| {
+        let _handler_id =
+            self.get_view()
+                .connect_test_expand_row(move |_tree, tree_iter, _tree_path| {
+                    let mut tree_item = tree_clone.find_tree_item(tree_iter);
 
-            let mut tree_item = tree_clone.find_tree_item(tree_iter);
+                    if !tree_item.children_read {
+                        let dummy_child = tree_clone.tree_store.iter_children(tree_iter).unwrap();
+                        let _result = tree_clone.tree_store.remove(&dummy_child);
 
-            if !tree_item.children_read {
-
-                let dummy_child = tree_clone.tree_store.iter_children(tree_iter).unwrap();
-                let _result = tree_clone.tree_store.remove(&dummy_child);
-
-                let children = tree_item.load_children();
-                for entry in children {
-                    tree_clone.add_node(Some(tree_iter), &entry)
-                }
-                tree_item.children_read = true;
-                tree_clone.update_tree_item(tree_item);
-            }
-            Inhibit(false)
-        });
+                        let children = tree_item.load_children();
+                        for entry in children {
+                            tree_clone.add_node(Some(tree_iter), &entry)
+                        }
+                        tree_item.children_read = true;
+                        tree_clone.update_tree_item(tree_item);
+                    }
+                    Inhibit(false)
+                });
     }
 
     fn register_select_row(&self) {
         let tree_clone = self.clone();
-        let _handler_id = self.get_view().get_selection().connect_changed(move |selection| {
-            let mut data = Vec::new();
-            let (_model, iter) = selection.get_selected().unwrap();
-            let item = tree_clone.find_tree_item(&iter);
-            let path = item.path;
-            data.push(("Path", String::from(path.to_str().unwrap())));
-            data.push(("Name", String::from(path.file_name().unwrap().to_str().unwrap())));
-            tree_clone.message_service.send("file_tree", "properties_changed", &data);
-        });
+        let _handler_id = self
+            .get_view()
+            .get_selection()
+            .connect_changed(move |selection| {
+                let mut data = Vec::new();
+                let (_model, iter) = selection.get_selected().unwrap();
+                let item = tree_clone.find_tree_item(&iter);
+                let path = item.path;
+                data.push(("Path", String::from(path.to_str().unwrap())));
+                data.push((
+                    "Name",
+                    String::from(path.file_name().unwrap().to_str().unwrap()),
+                ));
+                tree_clone
+                    .message_service
+                    .send("file_tree", "properties_changed", &data);
+            });
     }
-
 }
 
 impl Presenter<TreeView> for FileTreePresenter {
-
     fn new(app: &App) -> Self {
-        let tree_store = TreeStore::new( &[Type::U32,Type::String]);
+        let tree_store = TreeStore::new(&[Type::U32, Type::String]);
         let tree = TreeView::new_with_model(&tree_store);
         append_column(&tree);
         tree.set_headers_visible(false);
@@ -165,7 +179,7 @@ impl Presenter<TreeView> for FileTreePresenter {
             next_index: 0,
         };
 
-        let ms :MessageService = app.get_service();
+        let ms: MessageService = app.get_service();
 
         let file_tree = FileTreePresenter {
             model: Rc::new(RefCell::new(model)),
@@ -183,5 +197,4 @@ impl Presenter<TreeView> for FileTreePresenter {
     fn get_view(&self) -> &TreeView {
         &self.tree
     }
-
 }
