@@ -1,5 +1,4 @@
 use crate::service::Service;
-use downcast_rs::{impl_downcast, Downcast};
 use std::any::Any;
 use std::cell::RefCell;
 use std::collections::HashMap;

@@ -4,7 +4,6 @@ use crate::service::file::{FileItem, FileService};
 use crate::view::Presenter;
 use gtk::prelude::*;
 use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
-use std::collections::HashMap;
 use std::path::PathBuf;
 
 fn append_column(tree: &TreeView) {

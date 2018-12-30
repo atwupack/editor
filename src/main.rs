@@ -6,7 +6,6 @@ use crate::app::App;
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::Presenter;
-use gdk::prelude::*;
 use gdk::Screen;
 use gtk::prelude::*;
 use gtk::{
