@@ -165,7 +165,7 @@ impl Presenter<TreeView> for FileTreePresenter {
             next_index: 0,
         };
 
-        let ms :MessageService = app.service_factory.get_service();
+        let ms :MessageService = app.get_service();
 
         let file_tree = FileTreePresenter {
             model: Rc::new(RefCell::new(model)),

@@ -1,8 +1,9 @@
 use crate::service::ServiceFactory;
+use crate::service::Service;
 
 #[derive(Clone)]
 pub struct App {
-    pub service_factory: ServiceFactory,
+    service_factory: ServiceFactory,
 }
 
 impl App {
@@ -12,5 +13,7 @@ impl App {
         }
     }
 
-
+    pub fn get_service<T: Service+Clone>(&self) -> T {
+        self.service_factory.get_service()
+    }
 }
