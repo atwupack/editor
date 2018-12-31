@@ -45,18 +45,7 @@ fn main() {
     let scroll = ScrolledWindow::new(None, None);
     scroll.add(tree);
 
-    let left_notebook = Notebook::new();
-    left_notebook.set_tab_pos(PositionType::Left);
-    left_notebook.add(&scroll);
-    let file_label = Label::new("File");
-    file_label.set_angle(90.0);
-    file_label.set_single_line_mode(true);
-    file_label.set_vexpand(false);
-    file_label.set_hexpand(false);
-
-    left_notebook.set_tab_label(&scroll, &file_label);
-
-    vertical_split.pack1(&left_notebook, true, false);
+    vertical_split.pack1(&scroll, true, false);
 
     // create properties view
     let props = PropertyPresenter::new(&app);

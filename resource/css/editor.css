@@ -1,11 +1,32 @@
-notebook > header > tabs > * > label {
-    background-color: blue;
+* {
+    font-size: 9pt;
 }
 
-notebook > hedaer > tabs > * {
-    background-color: red;
+notebook tab {
+    min-height: 0;
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
 }
 
-notebook > header > tabs {
-    background-color: yellow;
+notebook label {
+    padding-top: 0px;
+    padding-bottom: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+notebook tab button {
+    min-height: 0;
+    min-width: 0;
+    padding: 0px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+}
+
+notebook button {
+    min-height: 0;
+    min-width: 0;
+    padding: 0px;
 }
