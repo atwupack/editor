@@ -5,6 +5,7 @@ mod view;
 use crate::app::App;
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
+use crate::view::log::LogPresenter;
 use crate::view::Presenter;
 use gdk::Screen;
 use gtk::prelude::*;
@@ -53,9 +54,18 @@ fn main() {
     let scroll = ScrolledWindow::new(None, None);
     scroll.add(props.get_view());
 
-    vertical_split.pack2(&scroll, false, false);
+    vertical_split.pack2(&scroll, true, false);
 
-    window.add(&vertical_split);
+    // add log view
+    let log = LogPresenter::new(&app);
+    let log_scroll = ScrolledWindow::new(None, None);
+    log_scroll.add(log.get_view());
+    let horiz_split = Paned::new(Orientation::Vertical);
+    horiz_split.pack1(&vertical_split, true, false);
+    horiz_split.pack2(&log_scroll, true, false);
+
+
+    window.add(&horiz_split);
     window.show_all();
 
     window.connect_delete_event(|_, _| {

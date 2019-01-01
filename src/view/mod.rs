@@ -1,5 +1,6 @@
 pub mod file_tree;
 pub mod property;
+pub mod log;
 
 use gtk::prelude::*;
 

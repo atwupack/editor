@@ -97,6 +97,7 @@ impl FileTreePresenter {
                 tree_clone
                     .message_service
                     .send("file_tree", "properties_changed", &data);
+                tree_clone.message_service.send("file_tree", "append_log", &String::from("Row selected"));
             });
     }
 }
@@ -108,14 +109,11 @@ impl Presenter<TreeView> for FileTreePresenter {
         append_column(&tree);
         tree.set_headers_visible(false);
 
-        let message_service: MessageService = app.get_service();
-        let file_service: FileService = app.get_service();
-
         let file_tree = FileTreePresenter {
             tree,
             tree_store,
-            message_service,
-            file_service,
+            message_service: app.get_service(),
+            file_service: app.get_service(),
         };
 
         file_tree.register_test_expand_row();
