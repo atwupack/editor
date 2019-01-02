@@ -38,7 +38,7 @@ fn main() {
     vertical_split.set_wide_handle(false);
 
     // create tree
-    let root = PathBuf::from(r"C:\Tools");
+    let root = PathBuf::from(r".").canonicalize().unwrap();
     let file_tree = FileTreePresenter::new(&app);
     file_tree.add_root_node(&root);
     let tree = file_tree.get_view();
