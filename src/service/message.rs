@@ -21,6 +21,14 @@ impl Service for MessageService {
 }
 
 impl MessageService {
+
+    pub fn connect(&self, source_msg_id: &'static str, target_msg_id: &'static str) {
+        let msg_service_clone = self.clone();
+        self.register(source_msg_id, move |_,_,obj| {
+            msg_service_clone.send("message_service", target_msg_id, obj);
+        })
+    }
+
     pub fn send(&self, comp_id: &str, message_id: &str, message_obj: &Any) {
         let callbacks = self.listeners.borrow();
         if !callbacks.contains_key(message_id) {
