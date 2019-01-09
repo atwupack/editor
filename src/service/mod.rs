@@ -28,7 +28,7 @@ impl ServiceFactory {
     pub fn get_service<T: Service + Clone>(&self) -> T {
         let id = T::id();
         let mut map = self.services.borrow_mut();
-        let service = map.remove(&id).unwrap_or(Box::new(T::new()));
+        let service = map.remove(&id).unwrap_or_else(|| {Box::new(T::new())});
         let cast_service: &T = service.as_ref().downcast_ref().unwrap();
 
         map.insert(id, Box::new(cast_service.clone()));

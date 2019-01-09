@@ -4,7 +4,7 @@ use crate::service::file::{FileItem, FileService};
 use crate::view::Presenter;
 use gtk::prelude::*;
 use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
-use std::path::PathBuf;
+use std::path::{Path};
 
 fn append_column(tree: &TreeView) {
     let column = TreeViewColumn::new();
@@ -28,13 +28,13 @@ impl FileTreePresenter {
 
         let tree_iter = if parent == None {
             self.tree_store
-                .insert_with_values(None, None, &[0, 1], &[&item.index(), &item.path()])
+                .insert_with_values(None, None, &[0, 1], &[&item.path_str(), &item.path_str()])
         } else {
             self.tree_store.insert_with_values(
                 parent,
                 None,
                 &[0, 1],
-                &[&item.index(), &item.name()],
+                &[&item.path_str(), &item.name()],
             )
         };
 
@@ -55,13 +55,12 @@ impl FileTreePresenter {
     }
 
     fn find_tree_item(&self, node: &TreeIter) -> FileItem {
-        let index:u32 = self.tree_store.get_value(node, 0).get().unwrap();
-        self.file_service.get_item(index)
+        let path: String = self.tree_store.get_value(node, 0).get().unwrap();
+        self.file_service.get_item(path)
     }
 
-    pub fn add_root_node(&self, root: &PathBuf) {
-        let index = self.file_service.add_item(root);
-        let item = self.file_service.get_item(index);
+    pub fn add_root_node<P: AsRef<Path>>(&self, root: P) {
+        let item = self.file_service.get_item(&root);
         self.add_node(None, &item);
     }
 
@@ -72,7 +71,7 @@ impl FileTreePresenter {
                 .connect_test_expand_row(move |_tree, tree_iter, _tree_path| {
                     tree_clone.remove_all_children(tree_iter);
                     let tree_item = tree_clone.find_tree_item(tree_iter);
-                    let children = tree_clone.file_service.get_children(tree_item.index());
+                    let children = tree_clone.file_service.get_children(&tree_item);
                     for child in children {
                         tree_clone.add_node(Some(tree_iter), &child);
                     }
@@ -89,7 +88,7 @@ impl FileTreePresenter {
                 let mut data = Vec::new();
                 let (_model, iter) = selection.get_selected().unwrap();
                 let item = tree_clone.find_tree_item(&iter);
-                data.push(("Path", String::from(item.path())));
+                data.push(("Path", String::from(item.path_str())));
                 data.push((
                     "Name",
                     String::from(item.name()),
@@ -104,7 +103,7 @@ impl FileTreePresenter {
 
 impl Presenter<TreeView> for FileTreePresenter {
     fn new(app: &App) -> Self {
-        let tree_store = TreeStore::new(&[Type::U32, Type::String]);
+        let tree_store = TreeStore::new(&[Type::String, Type::String]);
         let tree = TreeView::new_with_model(&tree_store);
         append_column(&tree);
         tree.set_headers_visible(false);

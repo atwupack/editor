@@ -25,7 +25,7 @@ impl MessageService {
     pub fn connect(&self, source_msg_id: &'static str, target_msg_id: &'static str) {
         let msg_service_clone = self.clone();
         self.register(source_msg_id, move |_,_,obj| {
-            msg_service_clone.send("message_service", target_msg_id, obj);
+            msg_service_clone.send(MessageService::id(), target_msg_id, obj);
         })
     }
 
@@ -42,7 +42,7 @@ impl MessageService {
 
     pub fn register<F: Fn(&str, &str, &Any) + 'static>(&self, message_id: &'static str, f: F) {
         let mut list = self.listeners.borrow_mut();
-        let mut recvs = list.remove(message_id).unwrap_or(Vec::new());
+        let mut recvs = list.remove(message_id).unwrap_or_default();
         recvs.push(Box::new(f));
         list.insert(message_id, recvs);
     }
