@@ -9,13 +9,13 @@ use gtk::prelude::*;
 pub struct LogPresenter {
     text_view: TextView,
     text_buffer: TextBuffer,
-    message_service: MessageService,
+    app: App,
 }
 
 impl LogPresenter {
     fn register_append_log(&self) {
         let log_clone = self.clone();
-        self.message_service.register("append_log", move |_,_,text| {
+        self.app.get_service::<MessageService>().register("append_log", move |_,_,text| {
             let text_str : &String = text.downcast_ref().unwrap();
             let mut text_iter = log_clone.text_buffer.get_end_iter();
             log_clone.text_buffer.insert(&mut text_iter, text_str.as_str());
@@ -29,10 +29,10 @@ impl Presenter<TextView> for LogPresenter {
         let buffer = TextBuffer::new(None);
         let view = TextView::new_with_buffer(&buffer);
         view.set_editable(false);
-        let log =LogPresenter {
+        let log = LogPresenter {
             text_view: view,
             text_buffer: buffer,
-            message_service: app.get_service(),
+            app: app.clone(),
         };
 
         log.register_append_log();

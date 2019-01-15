@@ -7,9 +7,9 @@ use gtk::{CellRendererText, ListStore, TreeView, TreeViewColumn, Type};
 
 #[derive(Clone)]
 pub struct PropertyPresenter {
-    message_service: MessageService,
     table: TreeView,
     list_store: ListStore,
+    app: App,
 }
 
 fn append_column(tree: &TreeView) {
@@ -33,7 +33,7 @@ fn append_column(tree: &TreeView) {
 impl PropertyPresenter {
     fn register_properties_changed(&self) {
         let pres_clone = self.clone();
-        self.message_service
+        self.app.get_service::<MessageService>()
             .register("properties_changed", move |_, _, obj| {
                 pres_clone.list_store.clear();
                 let data: &Vec<(&str, String)> = obj.downcast_ref().unwrap();
@@ -55,9 +55,9 @@ impl Presenter<TreeView> for PropertyPresenter {
         table.set_headers_visible(true);
 
         let property_view = PropertyPresenter {
-            message_service: app.get_service(),
             table,
             list_store,
+            app: app.clone(),
         };
 
         property_view.register_properties_changed();

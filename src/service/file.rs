@@ -1,9 +1,7 @@
 use crate::service::Service;
-use std::cell::RefCell;
 use std::collections::HashMap;
 use std::fs::{read_dir};
 use std::path::{PathBuf, Path};
-use std::rc::Rc;
 use dunce::canonicalize;
 
 
@@ -56,27 +54,24 @@ fn load_children<P: AsRef<Path>>(path: P) -> Vec<PathBuf> {
     result
 }
 
-#[derive(Clone)]
 pub struct FileService {
-    cache: Rc<RefCell<HashMap<PathBuf, FileItem>>>,
+    cache: HashMap<PathBuf, FileItem>,
 }
 
 impl FileService {
-    pub fn get_item<P: AsRef<Path>>(&self, path: P) -> FileItem {
-        let mut cache = self.cache.borrow_mut();
+    pub fn get_item<P: AsRef<Path>>(&mut self, path: P) -> FileItem {
         let key = canonicalize(&path).unwrap();
-        let item = cache.remove(&key).unwrap_or_else( || {FileItem::new(&path)});
-        let _old = cache.insert(item.path(), item.clone());
+        let item = self.cache.remove(&key).unwrap_or_else( || {FileItem::new(&path)});
+        let _old = self.cache.insert(item.path(), item.clone());
         item
     }
 
-    fn update_item(&self, item: FileItem) {
-        let mut cache = self.cache.borrow_mut();
+    fn update_item(&mut self, item: FileItem) {
         let key = item.path.canonicalize().unwrap();
-        let _old = cache.insert(key, item);
+        let _old = self.cache.insert(key, item);
     }
 
-    pub fn get_children<P: AsRef<Path>>(&self, parent: P) -> Vec<FileItem> {
+    pub fn get_children<P: AsRef<Path>>(&mut self, parent: P) -> Vec<FileItem> {
         let parent = self.get_item(&parent);
         let child_paths = parent.clone().children.unwrap_or_else(|| {
             let mut new_children = Vec::new();
@@ -105,7 +100,7 @@ impl FileService {
 impl Service for FileService {
     fn new() -> FileService {
         FileService {
-            cache: Rc::new(RefCell::new(HashMap::new())),
+            cache: HashMap::new(),
         }
     }
 
@@ -121,16 +116,16 @@ mod tests {
     use crate::service::Service;
     use std::path::Path;
 
-    fn create_current_dir(fs: &FileService) -> FileItem {
+    fn create_current_dir(fs: &mut FileService) -> FileItem {
         let path = Path::new(".");
         fs.get_item(path)
     }
 
     #[test]
     fn add_path() {
-        let fs = FileService::new();
+        let mut fs = FileService::new();
 
-        let item = create_current_dir(&fs);
+        let item = create_current_dir(&mut fs);
 
         assert!(item.is_dir());
         let inner_path = Path::new(item.path_str());
@@ -139,9 +134,9 @@ mod tests {
 
     #[test]
     fn get_children() {
-        let fs = FileService::new();
+        let mut fs = FileService::new();
 
-        let item = create_current_dir(&fs);
+        let item = create_current_dir(&mut fs);
 
         let children = fs.get_children(&item);
         assert!(children.len() > 0, "Children length {}", children.len());

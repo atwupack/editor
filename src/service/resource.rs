@@ -1,6 +1,5 @@
 use crate::service::Service;
 
-#[derive(Clone)]
 pub struct ResourceService {}
 
 impl Service for ResourceService {

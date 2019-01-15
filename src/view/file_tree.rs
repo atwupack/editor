@@ -19,8 +19,7 @@ fn append_column(tree: &TreeView) {
 pub struct FileTreePresenter {
     tree: TreeView,
     tree_store: TreeStore,
-    message_service: MessageService,
-    file_service: FileService,
+    app: App,
 }
 
 impl FileTreePresenter {
@@ -56,11 +55,11 @@ impl FileTreePresenter {
 
     fn find_tree_item(&self, node: &TreeIter) -> FileItem {
         let path: String = self.tree_store.get_value(node, 0).get().unwrap();
-        self.file_service.get_item(path)
+        self.app.get_service::<FileService>().get_item(path)
     }
 
     pub fn add_root_node<P: AsRef<Path>>(&self, root: P) {
-        let item = self.file_service.get_item(&root);
+        let item = self.app.get_service::<FileService>().get_item(&root);
         self.add_node(None, &item);
     }
 
@@ -71,7 +70,8 @@ impl FileTreePresenter {
                 .connect_test_expand_row(move |_tree, tree_iter, _tree_path| {
                     tree_clone.remove_all_children(tree_iter);
                     let tree_item = tree_clone.find_tree_item(tree_iter);
-                    let children = tree_clone.file_service.get_children(&tree_item);
+                    let mut file_service = tree_clone.app.get_service::<FileService>();
+                    let children = file_service.get_children(&tree_item);
                     for child in children {
                         tree_clone.add_node(Some(tree_iter), &child);
                     }
@@ -93,10 +93,10 @@ impl FileTreePresenter {
                     "Name",
                     String::from(item.name()),
                 ));
-                tree_clone
-                    .message_service
+                let message_service = tree_clone.app.get_service::<MessageService>();
+                message_service
                     .send("file_tree", "properties_changed", &data);
-                tree_clone.message_service.send("file_tree", "append_log", &String::from("Row selected"));
+                message_service.send("file_tree", "append_log", &String::from("Row selected"));
             });
     }
 }
@@ -111,8 +111,7 @@ impl Presenter<TreeView> for FileTreePresenter {
         let file_tree = FileTreePresenter {
             tree,
             tree_store,
-            message_service: app.get_service(),
-            file_service: app.get_service(),
+            app: app.clone(),
         };
 
         file_tree.register_test_expand_row();

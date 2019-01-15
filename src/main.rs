@@ -10,7 +10,7 @@ use crate::view::Presenter;
 use gdk::Screen;
 use gtk::prelude::*;
 use gtk::{
-    CssProvider, Label, Notebook, Orientation, Paned, PositionType, ScrolledWindow, StyleContext,
+    CssProvider, Orientation, Paned, ScrolledWindow, StyleContext,
     Window, WindowType,
 };
 use std::path::PathBuf;
