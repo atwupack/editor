@@ -47,6 +47,6 @@ mod tests {
     fn get_message_service() {
         let mut sr = ServiceFactory::new();
         let ms: &mut MessageService = sr.get_service();
-        ms.send("test-comp", "test-msg", &"test-obj");
+        //ms.send("test-comp", "test-msg", &"test-obj");
     }
 }

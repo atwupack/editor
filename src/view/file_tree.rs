@@ -1,6 +1,8 @@
 use crate::app::App;
-use crate::service::message::MessageService;
+use crate::service::message::{MessageService};
 use crate::service::file::{FileItem, FileService};
+use crate::view::property::PropertiesChanged;
+use crate::view::log::AppendLog;
 use crate::view::Presenter;
 use gtk::prelude::*;
 use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
@@ -88,15 +90,14 @@ impl FileTreePresenter {
                 let mut data = Vec::new();
                 let (_model, iter) = selection.get_selected().unwrap();
                 let item = tree_clone.find_tree_item(&iter);
-                data.push(("Path", String::from(item.path_str())));
+                data.push((String::from("Path"), String::from(item.path_str())));
                 data.push((
-                    "Name",
+                    String::from("Name"),
                     String::from(item.name()),
                 ));
                 let message_service = tree_clone.app.get_service::<MessageService>();
-                message_service
-                    .send("file_tree", "properties_changed", &data);
-                message_service.send("file_tree", "append_log", &String::from("Row selected"));
+                message_service.send("file_tree", &PropertiesChanged(data));
+                message_service.send("file_tree", &AppendLog(String::from("Row selected")));
             });
     }
 }

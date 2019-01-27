@@ -30,13 +30,15 @@ fn append_column(tree: &TreeView) {
     tree.append_column(&column2);
 }
 
+pub struct PropertiesChanged(pub Vec<(String, String)>);
+
 impl PropertyPresenter {
     fn register_properties_changed(&self) {
         let pres_clone = self.clone();
         self.app.get_service::<MessageService>()
-            .register("properties_changed", move |_, _, obj| {
+            .register(move |_, obj: &PropertiesChanged | {
                 pres_clone.list_store.clear();
-                let data: &Vec<(&str, String)> = obj.downcast_ref().unwrap();
+                let PropertiesChanged(data) = obj;
                 for (fst, snd) in data.iter() {
                     pres_clone
                         .list_store

@@ -12,11 +12,13 @@ pub struct LogPresenter {
     app: App,
 }
 
+pub struct AppendLog(pub String);
+
 impl LogPresenter {
     fn register_append_log(&self) {
         let log_clone = self.clone();
-        self.app.get_service::<MessageService>().register("append_log", move |_,_,text| {
-            let text_str : &String = text.downcast_ref().unwrap();
+        self.app.get_service::<MessageService>().register(move |_, text: &AppendLog| {
+            let AppendLog(text_str) = text;
             let mut text_iter = log_clone.text_buffer.get_end_iter();
             log_clone.text_buffer.insert(&mut text_iter, text_str.as_str());
             log_clone.text_buffer.insert(&mut text_iter, "\n");
