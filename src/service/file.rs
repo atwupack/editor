@@ -5,7 +5,7 @@ use std::path::{PathBuf, Path};
 use dunce::canonicalize;
 
 
-#[derive(Clone)]
+#[derive(Clone, Debug)]
 pub struct FileItem {
     path: PathBuf,
     children: Option<Vec<PathBuf>>,

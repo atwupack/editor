@@ -12,6 +12,7 @@ pub struct LogPresenter {
     app: App,
 }
 
+#[derive(Debug)]
 pub struct AppendLog(pub String);
 
 impl LogPresenter {

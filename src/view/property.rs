@@ -30,6 +30,7 @@ fn append_column(tree: &TreeView) {
     tree.append_column(&column2);
 }
 
+#[derive(Debug)]
 pub struct PropertiesChanged(pub Vec<(String, String)>);
 
 impl PropertyPresenter {
