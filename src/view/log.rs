@@ -19,11 +19,15 @@ impl LogPresenter {
     fn register_append_log(&self) {
         let log_clone = self.clone();
         self.app.get_service::<MessageService>().register(move |_, text: &AppendLog| {
-            let AppendLog(text_str) = text;
-            let mut text_iter = log_clone.text_buffer.get_end_iter();
-            log_clone.text_buffer.insert(&mut text_iter, text_str.as_str());
-            log_clone.text_buffer.insert(&mut text_iter, "\n");
+            log_clone.append_log_callback(text);
         });
+    }
+
+    fn append_log_callback(&self, message: &AppendLog) {
+        let AppendLog(text_str) = message;
+        let mut text_iter = self.text_buffer.get_end_iter();
+        self.text_buffer.insert(&mut text_iter, text_str.as_str());
+        self.text_buffer.insert(&mut text_iter, "\n");
     }
 }
 
