@@ -104,10 +104,6 @@ impl Service for FileService {
         }
     }
 
-    fn id() -> &'static str {
-        "file-service"
-    }
-
 }
 
 #[cfg(test)]

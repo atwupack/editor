@@ -6,8 +6,4 @@ impl Service for ResourceService {
     fn new() -> Self {
         ResourceService {}
     }
-
-    fn id() -> &'static str {
-        "resource-service"
-    }
 }

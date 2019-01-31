@@ -1,34 +1,33 @@
 use std::collections::HashMap;
 
 use downcast_rs::{impl_downcast, Downcast};
+use std::any::TypeId;
 
 pub mod file;
 pub mod message;
 pub mod resource;
+pub mod task;
 
 pub trait Service: Downcast {
     fn new() -> Self
-    where
-        Self: Sized;
-    fn id() -> &'static str
     where
         Self: Sized;
 }
 impl_downcast!(Service);
 
 pub struct ServiceFactory {
-    services: HashMap<&'static str, Box<dyn Service>>,
+    services: HashMap<TypeId, Box<dyn Service>>,
 }
 
 impl ServiceFactory {
-    pub fn get_service<T: Service>(&mut self) -> &mut T {
-        let id = T::id();
-        let service = self.services.remove(&id).unwrap_or_else(|| {Box::new(T::new())});
-
-        self.services.insert(id, service);
-
-        let new_service = self.services.get_mut(&id).unwrap().as_mut();
-        let cast_service: &mut T = new_service.downcast_mut().unwrap();
+    pub fn get_service<S: Service>(&mut self) -> &mut S {
+        let id = TypeId::of::<S>();
+        if !self.services.contains_key(&id) {
+            let new_service = Box::new(S::new());
+            self.services.insert(id, new_service);
+        }
+        let service = self.services.get_mut(&id).unwrap().as_mut();
+        let cast_service: &mut S = service.downcast_mut().unwrap();
         cast_service
     }
 
@@ -46,7 +45,7 @@ mod tests {
     #[test]
     fn get_message_service() {
         let mut sr = ServiceFactory::new();
-        let ms: &mut MessageService = sr.get_service();
+        let _ms: &mut MessageService = sr.get_service();
         //ms.send("test-comp", "test-msg", &"test-obj");
     }
 }

@@ -14,9 +14,6 @@ impl Service for MessageService {
             connections: HashMap::new(),
         }
     }
-    fn id() -> &'static str {
-        "message-service"
-    }
 }
 
 impl MessageService {
