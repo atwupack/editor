@@ -19,7 +19,9 @@ impl App {
     pub fn get_service<T: Service>(&self) -> RefMut<T> {
         let sf = self.service_factory.borrow_mut();
         RefMut::map(sf, |sf| {
-            sf.get_service()
+            sf.get_service(self)
         })
     }
+
+
 }

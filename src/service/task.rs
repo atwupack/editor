@@ -1,19 +1,38 @@
 use crate::service::Service;
-use std::any::TypeId;
-use std::collections::HashMap;
+use crate::app::App;
+use crate::service::message::MessageService;
 
-pub struct Task {
+pub struct RunTask(&'static dyn Task);
 
+#[derive(Clone)]
+pub struct TaskService {
+    app: App,
 }
 
-pub struct TaskService {
-    tasks: HashMap<TypeId, Task>,
+
+pub trait Task {
+    fn run(&self, app: &App);
+}
+
+impl TaskService {
+    fn run_task(&self, task: &dyn Task) {
+
+    }
 }
 
 impl Service for TaskService {
-    fn new() -> Self {
-        TaskService {
-            tasks: HashMap::new(),
-        }
+    fn new(app: &App) -> Self {
+        let ts = TaskService {
+            app: app.clone(),
+        };
+
+        let ts_clone = ts.clone();
+        let mut ms = app.get_service::<MessageService>();
+        ms.register(move |_comp_id, event: &RunTask | {
+            let RunTask(task) = event;
+            ts_clone.run_task(*task);
+        });
+
+        ts
     }
 }

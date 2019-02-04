@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs::{read_dir};
 use std::path::{PathBuf, Path};
 use dunce::canonicalize;
+use crate::app::App;
 
 
 #[derive(Clone, Debug)]
@@ -98,7 +99,7 @@ impl FileService {
 }
 
 impl Service for FileService {
-    fn new() -> FileService {
+    fn new(_app: &App) -> FileService {
         FileService {
             cache: HashMap::new(),
         }
