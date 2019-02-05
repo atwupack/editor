@@ -12,7 +12,7 @@ use gdk::Screen;
 use gtk::prelude::*;
 use gtk::{
     CssProvider, Orientation, Paned, ScrolledWindow, StyleContext,
-    Window, WindowType,
+    Window, WindowType, Widget,
 };
 use std::path::PathBuf;
 
@@ -24,25 +24,7 @@ impl Task for OpenDirectory {
     }
 }
 
-fn main() {
-    if gtk::init().is_err() {
-        println!("Failed to initialize GTK.");
-        return;
-    }
-
-    let screen = Screen::get_default().unwrap();
-
-    let css = CssProvider::new();
-    css.load_from_path("resource/css/editor.css").unwrap();
-
-    StyleContext::add_provider_for_screen(&screen, &css, 200);
-
-    let app = App::new();
-
-    // create window
-    let window = Window::new(WindowType::Toplevel);
-    window.set_title("My Little Editor");
-    window.set_default_size(350, 70);
+fn create_ui(app: &App) -> impl IsA<Widget> {
     let vertical_split = Paned::new(Orientation::Horizontal);
     vertical_split.set_wide_handle(false);
 
@@ -72,9 +54,36 @@ fn main() {
     let horiz_split = Paned::new(Orientation::Vertical);
     horiz_split.pack1(&vertical_split, true, false);
     horiz_split.pack2(&log_scroll, true, false);
+    horiz_split
+}
 
+fn create_window() {
 
-    window.add(&horiz_split);
+}
+
+fn main() {
+    if gtk::init().is_err() {
+        println!("Failed to initialize GTK.");
+        return;
+    }
+
+    let screen = Screen::get_default().unwrap();
+
+    let css = CssProvider::new();
+    css.load_from_path("resource/css/editor.css").unwrap();
+
+    StyleContext::add_provider_for_screen(&screen, &css, 200);
+
+    let app = App::new();
+
+    // create window
+    let window = Window::new(WindowType::Toplevel);
+    window.set_title("My Little Editor");
+    window.set_default_size(350, 70);
+
+    let content = create_ui(&app);
+
+    window.add(&content);
     window.show_all();
 
     window.connect_delete_event(|_, _| {
