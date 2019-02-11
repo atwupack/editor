@@ -7,24 +7,24 @@ use crate::service::task::Task;
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::log::LogPresenter;
+use crate::view::menu::MainMenuPresenter;
 use crate::view::Presenter;
 use gdk::Screen;
 use gtk::prelude::*;
 use gtk::{
     CssProvider, Orientation, Paned, ScrolledWindow, StyleContext,
-    Window, WindowType, Widget,
+    Widget, MenuBar, Box,
 };
 use std::path::PathBuf;
 
-struct OpenDirectory;
-
-impl Task for OpenDirectory {
-    fn run(&self, app: &App) {
-        unimplemented!()
-    }
-}
-
 fn create_ui(app: &App) -> impl IsA<Widget> {
+
+    let vbox = Box::new(Orientation::Vertical, 0);
+
+    let main_menu = MainMenuPresenter::new(app);
+
+    vbox.pack_start(main_menu.get_view(), false, false, 0);
+
     let vertical_split = Paned::new(Orientation::Horizontal);
     vertical_split.set_wide_handle(false);
 
@@ -54,11 +54,10 @@ fn create_ui(app: &App) -> impl IsA<Widget> {
     let horiz_split = Paned::new(Orientation::Vertical);
     horiz_split.pack1(&vertical_split, true, false);
     horiz_split.pack2(&log_scroll, true, false);
-    horiz_split
-}
 
-fn create_window() {
+    vbox.pack_start(&horiz_split, true, true, 0);
 
+    vbox
 }
 
 fn main() {
@@ -76,20 +75,7 @@ fn main() {
 
     let app = App::new();
 
-    // create window
-    let window = Window::new(WindowType::Toplevel);
-    window.set_title("My Little Editor");
-    window.set_default_size(350, 70);
-
     let content = create_ui(&app);
 
-    window.add(&content);
-    window.show_all();
-
-    window.connect_delete_event(|_, _| {
-        gtk::main_quit();
-        Inhibit(false)
-    });
-
-    gtk::main();
+    app.set_content(content).run();
 }

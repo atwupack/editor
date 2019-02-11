@@ -87,17 +87,9 @@ impl FileTreePresenter {
             .get_view()
             .get_selection()
             .connect_changed(move |selection| {
-                //let mut data = Vec::new();
                 let (_model, iter) = selection.get_selected().unwrap();
                 let item = tree_clone.find_tree_item(&iter);
-                //data.push((String::from("Path"), String::from(item.path_str())));
-                //data.push((
-                //    String::from("Name"),
-                //    String::from(item.name()),
-                //));
                 let message_service = tree_clone.app.get_service::<MessageService>();
-                //message_service.send("file_tree", &PropertiesChanged(data));
-                //message_service.send("file_tree", &AppendLog(String::from("Row selected")));
                 message_service.send("file-tree", &FileSelected(item));
             });
     }
