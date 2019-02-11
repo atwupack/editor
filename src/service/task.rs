@@ -1,4 +1,4 @@
-use crate::service::Service;
+use crate::service::{Service, ServiceFactory};
 use crate::app::App;
 use crate::service::message::MessageService;
 
@@ -21,7 +21,7 @@ impl TaskService {
 }
 
 impl Service for TaskService {
-    fn new(app: &App) -> Self {
+    fn new(sf: &mut ServiceFactory) -> Self {
         let ts = TaskService {
             app: app.clone(),
         };

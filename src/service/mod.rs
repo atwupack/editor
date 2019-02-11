@@ -10,7 +10,7 @@ pub mod resource;
 pub mod task;
 
 pub trait Service: Downcast {
-    fn new(app: &App) -> Self
+    fn new(sf: &mut ServiceFactory) -> Self
     where
         Self: Sized;
 }
@@ -21,9 +21,13 @@ pub struct ServiceFactory {
 }
 
 impl ServiceFactory {
-    pub fn get_service<S: Service>(&self, app: &App) -> &mut S {
+    pub fn get_service<S: Service>(&mut self) -> &mut S {
         let id = TypeId::of::<S>();
-        let service = self.services.get(&id).unwrap().as_mut();
+        if !self.services.contains_key(&id) {
+            let new_service = Box::new(S::new(app));
+            self.services.insert(id, new_service);
+        }
+        let service = self.services.get_mut(&id).unwrap().as_mut();
         let cast_service: &mut S = service.downcast_mut().unwrap();
         cast_service
     }
@@ -31,14 +35,6 @@ impl ServiceFactory {
     pub fn new() -> Self {
         ServiceFactory {
             services: HashMap::new(),
-        }
-    }
-
-    pub fn register_service<S: Service>(&mut self, app: &App) {
-        let id = TypeId::of::<S>();
-        if !self.services.contains_key(&id) {
-            let new_service = Box::new(S::new(app));
-            self.services.insert(id, new_service);
         }
     }
 }

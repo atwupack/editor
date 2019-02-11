@@ -4,7 +4,7 @@ use crate::service::file::FileService;
 use crate::service::resource::ResourceService;
 use crate::service::task::TaskService;
 
-use std::cell::{RefCell,Ref};
+use std::cell::{RefCell,RefMut};
 use std::rc::Rc;
 
 use gtk::{Window, WindowType, Widget};
@@ -27,13 +27,6 @@ fn create_window() -> Window {
 
 impl App {
 
-    fn register_services(&self) {
-        self.service_factory.borrow_mut().register_service::<ResourceService>(self);
-        self.service_factory.borrow_mut().register_service::<FileService>(self);
-        self.service_factory.borrow_mut().register_service::<MessageService>(self);
-        self.service_factory.borrow_mut().register_service::<TaskService>(self);
-    }
-
     fn register_quit(&self) {
         let mut message_service = self.get_service::<MessageService>();
         let app_clone = self.clone();
@@ -48,7 +41,6 @@ impl App {
             window: create_window(),
         };
 
-        app.register_services();
         app.register_quit();
 
         app.clone()
@@ -77,9 +69,9 @@ impl App {
 
 
     pub fn get_service<T: Service>(&self) -> RefMut<T> {
-        let sf = self.service_factory.borrow();
-        Ref::map(sf, |sf| {
-            sf.get_service(self)
+        let sf = self.service_factory.borrow_mut();
+        RefMut::map(sf, |sf| {
+            sf.get_service()
         })
     }
 

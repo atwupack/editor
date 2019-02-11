@@ -1,4 +1,4 @@
-use crate::service::Service;
+use crate::service::{Service, ServiceFactory};
 use std::collections::HashMap;
 use std::fs::{read_dir};
 use std::path::{PathBuf, Path};
@@ -99,7 +99,7 @@ impl FileService {
 }
 
 impl Service for FileService {
-    fn new(_app: &App) -> FileService {
+    fn new(_sf: &mut ServiceFactory) -> FileService {
         FileService {
             cache: HashMap::new(),
         }
