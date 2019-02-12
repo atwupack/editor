@@ -1,4 +1,4 @@
-use crate::service::{Service, ServiceFactory};
+use crate::service::{Service};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use crate::app::App;
@@ -9,7 +9,7 @@ pub struct MessageService {
 }
 
 impl Service for MessageService {
-    fn new(_sf: &mut ServiceFactory) -> MessageService {
+    fn new(_app: &App) -> MessageService {
         MessageService {
             listeners: HashMap::new(),
             connections: HashMap::new(),

@@ -10,7 +10,7 @@ pub mod resource;
 pub mod task;
 
 pub trait Service: Downcast {
-    fn new(sf: &mut ServiceFactory) -> Self
+    fn new(app: &App) -> Self
     where
         Self: Sized;
 }
@@ -21,7 +21,7 @@ pub struct ServiceFactory {
 }
 
 impl ServiceFactory {
-    pub fn get_service<S: Service>(&mut self) -> &mut S {
+    pub fn get_service<S: Service>(&mut self, app: &App) -> &mut S {
         let id = TypeId::of::<S>();
         if !self.services.contains_key(&id) {
             let new_service = Box::new(S::new(app));

@@ -17,7 +17,7 @@ pub struct MainMenuPresenter {
 pub struct SelectProjectDirectory;
 
 impl Task for SelectProjectDirectory {
-    fn run(&self, app: &App) {
+    fn run(&self, _app: &App) {
         println!("Select project directory");
     }
 }

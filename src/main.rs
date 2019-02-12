@@ -3,7 +3,6 @@ mod service;
 mod view;
 
 use crate::app::App;
-use crate::service::task::Task;
 use crate::view::file_tree::FileTreePresenter;
 use crate::view::property::PropertyPresenter;
 use crate::view::log::LogPresenter;
@@ -13,7 +12,7 @@ use gdk::Screen;
 use gtk::prelude::*;
 use gtk::{
     CssProvider, Orientation, Paned, ScrolledWindow, StyleContext,
-    Widget, MenuBar, Box,
+    Widget, Box,
 };
 use std::path::PathBuf;
 

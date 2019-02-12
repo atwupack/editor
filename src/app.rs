@@ -1,14 +1,13 @@
 use crate::service::{Service, ServiceFactory};
 use crate::service::message::MessageService;
-use crate::service::file::FileService;
-use crate::service::resource::ResourceService;
-use crate::service::task::TaskService;
 
 use std::cell::{RefCell,RefMut};
 use std::rc::Rc;
 
 use gtk::{Window, WindowType, Widget};
 use gtk::prelude::*;
+
+//use std::borrow::BorrowMut;
 
 pub struct QuitApp;
 
@@ -69,10 +68,15 @@ impl App {
 
 
     pub fn get_service<T: Service>(&self) -> RefMut<T> {
-        let sf = self.service_factory.borrow_mut();
+        let sf: RefMut<ServiceFactory> = self.service_factory.borrow_mut();
         RefMut::map(sf, |sf| {
-            sf.get_service()
+            sf.get_service(self)
         })
+    }
+
+    pub fn with_services<F: FnOnce(RefMut<ServiceFactory>)>(&self, f:F) {
+        let sf: RefMut<ServiceFactory> = self.service_factory.borrow_mut();
+        f(sf)
     }
 
 }
