@@ -3,16 +3,21 @@ use std::any::{Any, TypeId};
 use std::collections::HashMap;
 use crate::app::App;
 
+use gtk::idle_add;
+use gtk::prelude::*;
+
 pub struct MessageService {
-    listeners: HashMap<TypeId, Vec<Box<Fn(&str, &dyn Any)>>>,
+    listeners: HashMap<TypeId, Vec<Box<Fn(&App, &str, &dyn Any)>>>,
     connections: HashMap<TypeId, HashMap<TypeId, Box<Fn(&dyn Any) -> Box<dyn Any>>>>,
+    app: App,
 }
 
 impl Service for MessageService {
-    fn new(_app: &App) -> MessageService {
+    fn new(app: &App) -> MessageService {
         MessageService {
             listeners: HashMap::new(),
             connections: HashMap::new(),
+            app: app.clone(),
         }
     }
 }
@@ -34,7 +39,7 @@ impl MessageService {
         self.connections.insert(type_id_in, cons);
     }
 
-    pub fn send<M: Any>(&self, comp_id: &str, message: &M)
+    pub fn send_and_wait<M: Any>(&self, comp_id: &str, message: &M)
     {
         let type_id = TypeId::of::<M>();
         self.notify_listeners(comp_id, type_id, message);
@@ -49,27 +54,38 @@ impl MessageService {
         }
     }
 
+    pub fn send<M: Any + Clone>(&self, comp_id: &'static str, message: &M)
+    {
+        let app_clone = self.app.clone();
+        let msg_clone = message.clone();
+        idle_add(move || {
+            let message_service = app_clone.get_service::<MessageService>();
+            message_service.send_and_wait(comp_id, &msg_clone);
+            Continue(false)
+        });
+    }
+
     fn notify_listeners(&self, comp_id: &str, type_id: TypeId, message: &dyn Any) {
         let recvs = self.listeners.get(&type_id);
         if recvs.is_some() {
             let v = recvs.unwrap();
             for item in v.iter() {
-                item(comp_id, message);
+                item(&self.app, comp_id, message);
             }
         }
     }
 
-    fn add_listener<F: Fn(&str, &dyn Any) + 'static>(&mut self, type_id: TypeId, f: F) {
+    fn add_listener<F: Fn(&App, &str, &dyn Any) + 'static>(&mut self, type_id: TypeId, f: F) {
         let mut recvs = self.listeners.remove(&type_id).unwrap_or_default();
         recvs.push(Box::new(f));
         self.listeners.insert(type_id, recvs);
     }
 
-    pub fn register<F: Fn(&str, &M) + 'static, M: Any>(&mut self, f: F) {
+    pub fn register<F: Fn(&App, &str, &M) + 'static, M: Any>(&mut self, f: F) {
         let type_id = TypeId::of::<M>();
-        self.add_listener(type_id, move |comp_id, message| {
+        self.add_listener(type_id, move |app, comp_id, message| {
             let cast_message: &M = message.downcast_ref().unwrap();
-            f(comp_id, cast_message);
+            f(app, comp_id, cast_message);
         });
     }
 }

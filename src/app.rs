@@ -1,19 +1,18 @@
 use crate::service::{Service, ServiceFactory};
 use crate::service::message::MessageService;
+use crate::service::task::TaskService;
 
-use std::cell::{RefCell,RefMut};
-use std::rc::Rc;
+use std::cell::RefMut;
 
 use gtk::{Window, WindowType, Widget};
 use gtk::prelude::*;
 
-//use std::borrow::BorrowMut;
-
+#[derive(Clone)]
 pub struct QuitApp;
 
 #[derive(Clone)]
 pub struct App {
-    service_factory: Rc<RefCell<ServiceFactory>>,
+    service_factory: ServiceFactory,
     window: Window,
 }
 
@@ -26,21 +25,26 @@ fn create_window() -> Window {
 
 impl App {
 
+    pub fn window(&self) -> &Window {
+        &self.window
+    }
+
     fn register_quit(&self) {
         let mut message_service = self.get_service::<MessageService>();
-        let app_clone = self.clone();
-        message_service.register(move |_comp, _message: &QuitApp| {
-            app_clone.close_app();
+        message_service.register(move |app, _comp, _message: &QuitApp| {
+            app.close_app();
         });
     }
 
     pub fn new() -> App {
         let app = App {
-            service_factory: Rc::new(RefCell::new(ServiceFactory::new())),
+            service_factory: ServiceFactory::new(),
             window: create_window(),
         };
 
         app.register_quit();
+
+        let _ts = app.get_service::<TaskService>();
 
         app.clone()
     }
@@ -67,16 +71,12 @@ impl App {
     }
 
 
-    pub fn get_service<T: Service>(&self) -> RefMut<T> {
-        let sf: RefMut<ServiceFactory> = self.service_factory.borrow_mut();
-        RefMut::map(sf, |sf| {
-            sf.get_service(self)
-        })
+    pub fn get_service<S: Service>(&self) -> RefMut<S> {
+        self.service_factory.get_service(self)
     }
 
-    pub fn with_services<F: FnOnce(RefMut<ServiceFactory>)>(&self, f:F) {
-        let sf: RefMut<ServiceFactory> = self.service_factory.borrow_mut();
-        f(sf)
+    pub fn with_services<F: FnOnce(&ServiceFactory)>(&self, f:F) {
+        f(&self.service_factory)
     }
 
 }

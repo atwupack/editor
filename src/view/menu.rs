@@ -3,7 +3,7 @@ use crate::app::{App, QuitApp};
 use crate::service::message::MessageService;
 use crate::service::task::{Task, RunTask};
 
-use gtk::{MenuBar, MenuItem, Menu, SeparatorMenuItem};
+use gtk::{MenuBar, MenuItem, Menu, SeparatorMenuItem, FileChooserDialog, FileChooserAction, ResponseType};
 use gtk::prelude::*;
 
 use std::any::Any;
@@ -17,19 +17,24 @@ pub struct MainMenuPresenter {
 pub struct SelectProjectDirectory;
 
 impl Task for SelectProjectDirectory {
-    fn run(&self, _app: &App) {
-        println!("Select project directory");
+    fn run(&self, app: &App) {
+        let dialog = FileChooserDialog::with_buttons(Some("Select Project Directory"),
+                                            Some(app.window()),
+                                            FileChooserAction::SelectFolder,
+                                            &[("_Cancel", ResponseType::Cancel), ("_Select", ResponseType::Accept)]);
+        let res = dbg!(dialog.run());
+        dialog.destroy();
     }
 }
 
 impl MainMenuPresenter {
-    fn create_message_item<M: Any>(&self, label: &'static str, message: M) -> MenuItem {
+    fn create_message_item<M: Any + Clone>(&self, label: &'static str, message: &M) -> MenuItem {
         let mmp_clone = self.clone();
-
+        let msg_clone = message.clone();
         let mi = MenuItem::new_with_label(label);
         mi.connect_activate(move |_menu_item| {
             let message_service = mmp_clone.app.get_service::<MessageService>();
-            message_service.send(label, &message);
+            message_service.send(label, &msg_clone);
         });
 
         mi
@@ -52,8 +57,8 @@ impl Presenter<MenuBar> for MainMenuPresenter {
         mmp.menu_bar.append(&file_mi);
         file_mi.set_submenu(Some(&file_menu));
 
-        let add_dir_mi = mmp.create_message_item("Add Project Directory...", RunTask(&SelectProjectDirectory));
-        let quit_mi = mmp.create_message_item("Quit", QuitApp);
+        let add_dir_mi = mmp.create_message_item("Add Project Directory...", &RunTask(&SelectProjectDirectory));
+        let quit_mi = mmp.create_message_item("Quit", &QuitApp);
 
         file_menu.append(&add_dir_mi);
         file_menu.append(&SeparatorMenuItem::new());

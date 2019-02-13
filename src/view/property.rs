@@ -37,7 +37,7 @@ impl PropertyPresenter {
     fn register_properties_changed(&self) {
         let pres_clone = self.clone();
         self.app.get_service::<MessageService>()
-            .register(move |_, obj: &PropertiesChanged | {
+            .register(move |_app, _, obj: &PropertiesChanged | {
                 pres_clone.list_store.clear();
                 let PropertiesChanged(data) = obj;
                 for (fst, snd) in data.iter() {

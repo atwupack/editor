@@ -96,7 +96,7 @@ impl FileTreePresenter {
 }
 
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct FileSelected(pub FileItem);
 
 impl Presenter<TreeView> for FileTreePresenter {
