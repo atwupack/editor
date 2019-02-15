@@ -6,7 +6,7 @@ use crate::view::log::AppendLog;
 use crate::view::Presenter;
 use gtk::prelude::*;
 use gtk::{CellRendererText, TreeIter, TreeStore, TreeView, TreeViewColumn, Type};
-use std::path::{Path};
+use std::path::{Path, PathBuf};
 
 fn append_column(tree: &TreeView) {
     let column = TreeViewColumn::new();
@@ -98,6 +98,8 @@ impl FileTreePresenter {
 
 #[derive(Debug, Clone)]
 pub struct FileSelected(pub FileItem);
+#[derive(Debug, Clone)]
+pub struct AddRootNode(pub PathBuf);
 
 impl Presenter<TreeView> for FileTreePresenter {
     fn new(app: &App) -> Self {
@@ -129,6 +131,12 @@ impl Presenter<TreeView> for FileTreePresenter {
 
         message_service.connect(|_input: &FileSelected| {
             AppendLog(String::from("Row selected."))
+        });
+
+        let tree_clone = file_tree.clone();
+        message_service.register(move |app, id, message: &AddRootNode| {
+            let AddRootNode(path) = message;
+            tree_clone.add_root_node(path);
         });
 
         file_tree

@@ -2,9 +2,11 @@ use crate::view::Presenter;
 use crate::app::{App, QuitApp};
 use crate::service::message::MessageService;
 use crate::service::task::{Task, RunTask};
+use crate::view::file_tree::AddRootNode;
 
 use gtk::{MenuBar, MenuItem, Menu, SeparatorMenuItem, FileChooserDialog, FileChooserAction, ResponseType};
 use gtk::prelude::*;
+use gio::FileExt;
 
 use std::any::Any;
 
@@ -22,7 +24,16 @@ impl Task for SelectProjectDirectory {
                                             Some(app.window()),
                                             FileChooserAction::SelectFolder,
                                             &[("_Cancel", ResponseType::Cancel), ("_Select", ResponseType::Accept)]);
-        let res = dbg!(dialog.run());
+        let res = dialog.run();
+        if res == ResponseType::Accept.into() {
+            let selection = dialog.get_file();
+            selection.map(|file| {
+                file.get_path().map(|path|{
+                    let ms = app.get_service::<MessageService>();
+                    ms.send("", &AddRootNode(path));
+                });
+            });
+        }
         dialog.destroy();
     }
 }
