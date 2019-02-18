@@ -1,7 +1,7 @@
 use crate::service::{Service};
 use std::any::{Any, TypeId};
 use std::collections::HashMap;
-use crate::app::App;
+use crate::app::{App, AppContext};
 
 use gtk::idle_add;
 use gtk::prelude::*;
@@ -13,11 +13,11 @@ pub struct MessageService {
 }
 
 impl Service for MessageService {
-    fn new(app: &App) -> MessageService {
+    fn new(ctx: &mut AppContext) -> MessageService {
         MessageService {
             listeners: HashMap::new(),
             connections: HashMap::new(),
-            app: app.clone(),
+            app: ctx.app().clone(),
         }
     }
 }

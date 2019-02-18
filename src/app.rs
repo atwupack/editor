@@ -21,12 +21,16 @@ impl AppContext {
         }
     }
 
+    pub fn app(&self) -> &App {
+        self.app.as_ref().unwrap()
+    }
+
     fn set_app(&mut self, app: &App) {
         self.app = Some(app.clone());
     }
 
     pub fn get_service<S: Service>(&mut self) -> &mut S {
-        self.service_factory.get_service(self.app.as_ref().unwrap())
+        self.service_factory.get_service(self)
     }
 }
 

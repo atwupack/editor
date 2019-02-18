@@ -26,11 +26,11 @@ impl ServiceFactory {
         self.services.contains_key(&type_id)
     }
 
-    pub fn get_service<S: Service>(&mut self, app: &App) -> &mut S {
+    pub fn get_service<S: Service>(&mut self, ctx: &mut AppContext) -> &mut S {
         let id = TypeId::of::<S>();
         let known_service =self.has_type_id(id);
         if !known_service {
-            let new_service = Box::new(S::new(app));
+            let new_service = Box::new(S::new(ctx));
             self.services.insert(id, new_service);
         }
 

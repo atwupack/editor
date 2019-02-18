@@ -1,5 +1,5 @@
 use crate::service::{Service};
-use crate::app::App;
+use crate::app::{App, AppContext};
 use crate::service::message::MessageService;
 
 #[derive(Clone)]
@@ -21,20 +21,17 @@ impl TaskService {
 }
 
 impl Service for TaskService {
-    fn new(app: &App) -> Self {
+    fn new(ctx: &mut AppContext) -> Self {
         let ts = TaskService {
-            app: app.clone(),
+            app: ctx.app().clone(),
         };
 
         let ts_clone = ts.clone();
-        app.with_context(|ctx| {
-            let ms = ctx.get_service::<MessageService>();
-            ms.register(move |_app, _comp_id, event: &RunTask | {
-
-                println!("Run task");
-                let RunTask(task) = event;
-                ts_clone.run_task(*task);
-            });
+        let ms = ctx.get_service::<MessageService>();
+        ms.register(move |_app, _comp_id, event: &RunTask | {
+            println!("Run task");
+            let RunTask(task) = event;
+            ts_clone.run_task(*task);
         });
 
         ts
