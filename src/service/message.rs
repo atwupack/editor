@@ -59,8 +59,10 @@ impl MessageService {
         let app_clone = self.app.clone();
         let msg_clone = message.clone();
         idle_add(move || {
-            let message_service = app_clone.get_service::<MessageService>();
-            message_service.send_and_wait(comp_id, &msg_clone);
+            app_clone.with_context(|ctx| {
+                let message_service = ctx.get_service::<MessageService>();
+                message_service.send_and_wait(comp_id, &msg_clone);
+            });
             Continue(false)
         });
     }

@@ -2,17 +2,40 @@ use crate::service::{Service, ServiceFactory};
 use crate::service::message::MessageService;
 use crate::service::task::TaskService;
 
-use std::cell::RefMut;
+use std::cell::RefCell;
+use std::rc::Rc;
 
 use gtk::{Window, WindowType, Widget};
 use gtk::prelude::*;
+
+pub struct AppContext {
+    service_factory: ServiceFactory,
+    app: Option<App>,
+}
+
+impl AppContext {
+    fn new() -> AppContext {
+        AppContext {
+            service_factory: ServiceFactory::new(),
+            app: None,
+        }
+    }
+
+    fn set_app(&mut self, app: &App) {
+        self.app = Some(app.clone());
+    }
+
+    pub fn get_service<S: Service>(&mut self) -> &mut S {
+        self.service_factory.get_service(self.app.as_ref().unwrap())
+    }
+}
 
 #[derive(Clone)]
 pub struct QuitApp;
 
 #[derive(Clone)]
 pub struct App {
-    service_factory: ServiceFactory,
+    context: Rc<RefCell<AppContext>>,
     window: Window,
 }
 
@@ -30,21 +53,29 @@ impl App {
     }
 
     fn register_quit(&self) {
-        let mut message_service = self.get_service::<MessageService>();
-        message_service.register(move |app, _comp, _message: &QuitApp| {
-            app.close_app();
-        });
+        self.with_context(|ctx| {
+            let message_service = ctx.get_service::<MessageService>();
+            message_service.register(move |app, _comp, _message: &QuitApp| {
+                app.close_app();
+            });
+        })
     }
 
     pub fn new() -> App {
+
         let app = App {
-            service_factory: ServiceFactory::new(),
             window: create_window(),
+            context: Rc::new(RefCell::new(AppContext::new())),
         };
+        {
+            let mut ctx = app.context.borrow_mut();
+            ctx.set_app(&app);
+        }
+        app.with_context(|ctx| {
+            let _ts = ctx.get_service::<TaskService>();
+        });
 
         app.register_quit();
-
-        let _ts = app.get_service::<TaskService>();
 
         app.clone()
     }
@@ -70,13 +101,9 @@ impl App {
         gtk::main();
     }
 
-
-    pub fn get_service<S: Service>(&self) -> RefMut<S> {
-        self.service_factory.get_service(self)
-    }
-
-    pub fn with_services<F: FnOnce(&ServiceFactory)>(&self, f:F) {
-        f(&self.service_factory)
+    pub fn with_context<F: FnOnce(&mut AppContext)>(&self, f:F) {
+        let mut context = self.context.borrow_mut();
+        f(&mut context);
     }
 
 }

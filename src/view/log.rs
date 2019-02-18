@@ -18,8 +18,10 @@ pub struct AppendLog(pub String);
 impl LogPresenter {
     fn register_append_log(&self) {
         let log_clone = self.clone();
-        self.app.get_service::<MessageService>().register(move |_app, _, text: &AppendLog| {
-            log_clone.append_log_callback(text);
+        self.app.with_context(|ctx| {
+            ctx.get_service::<MessageService>().register(move |_app, _, text: &AppendLog| {
+                log_clone.append_log_callback(text);
+            });
         });
     }
 
