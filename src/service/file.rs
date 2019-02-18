@@ -111,6 +111,7 @@ impl Service for FileService {
 mod tests {
     use crate::service::file::{FileService, FileItem};
     use crate::service::Service;
+    use crate::app::App;
     use std::path::Path;
 
     fn create_current_dir(fs: &mut FileService) -> FileItem {
@@ -120,7 +121,8 @@ mod tests {
 
     #[test]
     fn add_path() {
-        let mut fs = FileService::new();
+        let app = App::new();
+        let mut fs = FileService::new(&app);
 
         let item = create_current_dir(&mut fs);
 
@@ -131,7 +133,8 @@ mod tests {
 
     #[test]
     fn get_children() {
-        let mut fs = FileService::new();
+        let app = App::new();
+        let mut fs = FileService::new(&app);
 
         let item = create_current_dir(&mut fs);
 

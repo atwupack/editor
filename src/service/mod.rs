@@ -56,14 +56,23 @@ impl ServiceFactory {
 
 #[cfg(test)]
 mod tests {
+    use crate::service::task::TaskService;
     use crate::service::message::MessageService;
     use crate::service::ServiceFactory;
+    use crate::app::App;
     use std::cell::RefMut;
 
     #[test]
-    fn get_message_service() {
+    fn get_simple_service() {
+        let app = App::new();
         let mut sr = ServiceFactory::new();
-        //let _ms: RefMut<MessageService> = sr.get_service();
-        //ms.send("test-comp", "test-msg", &"test-obj");
+        let _ms = sr.get_service::<MessageService>(&app);
+    }
+
+    #[test]
+    fn get_service_using_other_aervice() {
+        let app = App::new();
+        let mut sr = ServiceFactory::new();
+        let _ts = sr.get_service::<TaskService>(&app);
     }
 }
