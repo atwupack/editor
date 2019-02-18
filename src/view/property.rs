@@ -36,16 +36,18 @@ pub struct PropertiesChanged(pub Vec<(String, String)>);
 impl PropertyPresenter {
     fn register_properties_changed(&self) {
         let pres_clone = self.clone();
-        self.app.get_service::<MessageService>()
-            .register(move |_app, _, obj: &PropertiesChanged | {
-                pres_clone.list_store.clear();
-                let PropertiesChanged(data) = obj;
-                for (fst, snd) in data.iter() {
-                    pres_clone
-                        .list_store
-                        .insert_with_values(None, &[0, 1], &[&fst, &snd]);
-                }
-            });
+        self.app.with_context(|ctx| {
+            ctx.get_service::<MessageService>()
+                .register(move |_app, _, obj: &PropertiesChanged | {
+                    pres_clone.list_store.clear();
+                    let PropertiesChanged(data) = obj;
+                    for (fst, snd) in data.iter() {
+                        pres_clone
+                            .list_store
+                            .insert_with_values(None, &[0, 1], &[&fst, &snd]);
+                    }
+                });
+        });
     }
 }
 

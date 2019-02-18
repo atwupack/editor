@@ -29,8 +29,10 @@ impl Task for SelectProjectDirectory {
             let selection = dialog.get_file();
             selection.map(|file| {
                 file.get_path().map(|path|{
-                    let ms = app.get_service::<MessageService>();
-                    ms.send("", &AddRootNode(path));
+                    app.with_context(|ctx| {
+                        let ms = ctx.get_service::<MessageService>();
+                        ms.send("", &AddRootNode(path));
+                    });
                 });
             });
         }
@@ -40,12 +42,14 @@ impl Task for SelectProjectDirectory {
 
 impl MainMenuPresenter {
     fn create_message_item<M: Any + Clone>(&self, label: &'static str, message: &M) -> MenuItem {
-        let mmp_clone = self.clone();
+        let app_clone = self.app.clone();
         let msg_clone = message.clone();
         let mi = MenuItem::new_with_label(label);
         mi.connect_activate(move |_menu_item| {
-            let message_service = mmp_clone.app.get_service::<MessageService>();
-            message_service.send(label, &msg_clone);
+            app_clone.with_context(|ctx| {
+                let message_service = ctx.get_service::<MessageService>();
+                message_service.send(label, &msg_clone);
+            });
         });
 
         mi

@@ -1,4 +1,4 @@
-use crate::app::App;
+use crate::app::{App, AppContext};
 use crate::service::message::{MessageService};
 use crate::service::file::{FileItem, FileService};
 use crate::view::property::PropertiesChanged;
@@ -55,14 +55,16 @@ impl FileTreePresenter {
         while self.tree_store.remove(&child_iter) {}
     }
 
-    fn find_tree_item(&self, node: &TreeIter) -> FileItem {
+    fn find_tree_item(&self, node: &TreeIter, ctx: &mut AppContext) -> FileItem {
         let path: String = self.tree_store.get_value(node, 0).get().unwrap();
-        self.app.get_service::<FileService>().get_item(path)
+        ctx.get_service::<FileService>().get_item(path)
     }
 
     pub fn add_root_node<P: AsRef<Path>>(&self, root: P) {
-        let item = self.app.get_service::<FileService>().get_item(&root);
-        self.add_node(None, &item);
+        self.app.with_context(|ctx| {
+            let item = ctx.get_service::<FileService>().get_item(&root);
+            self.add_node(None, &item);
+        });
     }
 
     fn register_test_expand_row(&self) {
@@ -71,12 +73,14 @@ impl FileTreePresenter {
             self.get_view()
                 .connect_test_expand_row(move |_tree, tree_iter, _tree_path| {
                     tree_clone.remove_all_children(tree_iter);
-                    let tree_item = tree_clone.find_tree_item(tree_iter);
-                    let mut file_service = tree_clone.app.get_service::<FileService>();
-                    let children = file_service.get_children(&tree_item);
-                    for child in children {
-                        tree_clone.add_node(Some(tree_iter), &child);
-                    }
+                    tree_clone.app.with_context(|ctx| {
+                        let tree_item = tree_clone.find_tree_item(tree_iter, ctx);
+                        let file_service = ctx.get_service::<FileService>();
+                        let children = file_service.get_children(&tree_item);
+                        for child in children {
+                            tree_clone.add_node(Some(tree_iter), &child);
+                        }
+                    });
                     Inhibit(false)
                 });
     }
@@ -88,9 +92,11 @@ impl FileTreePresenter {
             .get_selection()
             .connect_changed(move |selection| {
                 let (_model, iter) = selection.get_selected().unwrap();
-                let item = tree_clone.find_tree_item(&iter);
-                let message_service = tree_clone.app.get_service::<MessageService>();
-                message_service.send("file-tree", &FileSelected(item));
+                tree_clone.app.with_context(|ctx|{
+                    let item = tree_clone.find_tree_item(&iter, ctx);
+                    let message_service = ctx.get_service::<MessageService>();
+                    message_service.send("file-tree", &FileSelected(item));
+                });
             });
     }
 }
@@ -117,26 +123,28 @@ impl Presenter<TreeView> for FileTreePresenter {
         file_tree.register_test_expand_row();
         file_tree.register_select_row();
 
-        let mut message_service = app.get_service::<MessageService>();
-        message_service.connect(|input: &FileSelected| {
-            let FileSelected(item) = input;
-            let mut data = Vec::new();
-            data.push((String::from("Path"), String::from(item.path_str())));
-            data.push((
-                String::from("Name"),
-                String::from(item.name()),
-            ));
-            PropertiesChanged(data)
-        });
+        app.with_context(|ctx| {
+            let message_service = ctx.get_service::<MessageService>();
+            message_service.connect(|input: &FileSelected| {
+                let FileSelected(item) = input;
+                let mut data = Vec::new();
+                data.push((String::from("Path"), String::from(item.path_str())));
+                data.push((
+                    String::from("Name"),
+                    String::from(item.name()),
+                ));
+                PropertiesChanged(data)
+            });
 
-        message_service.connect(|_input: &FileSelected| {
-            AppendLog(String::from("Row selected."))
-        });
+            message_service.connect(|_input: &FileSelected| {
+                AppendLog(String::from("Row selected."))
+            });
 
-        let tree_clone = file_tree.clone();
-        message_service.register(move |app, id, message: &AddRootNode| {
-            let AddRootNode(path) = message;
-            tree_clone.add_root_node(path);
+            let tree_clone = file_tree.clone();
+            message_service.register(move |_app, _id, message: &AddRootNode| {
+                let AddRootNode(path) = message;
+                tree_clone.add_root_node(path);
+            });
         });
 
         file_tree

@@ -27,12 +27,14 @@ impl Service for TaskService {
         };
 
         let ts_clone = ts.clone();
-        let mut ms = app.get_service::<MessageService>();
-        ms.register(move |_app, _comp_id, event: &RunTask | {
+        app.with_context(|ctx| {
+            let ms = ctx.get_service::<MessageService>();
+            ms.register(move |_app, _comp_id, event: &RunTask | {
 
-            println!("Run task");
-            let RunTask(task) = event;
-            ts_clone.run_task(*task);
+                println!("Run task");
+                let RunTask(task) = event;
+                ts_clone.run_task(*task);
+            });
         });
 
         ts
